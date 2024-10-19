@@ -1,6 +1,5 @@
 import command from './handler/command.js';
 import reply from './handler/reply.js';
-//import handleButton from './handler/button.js';
 import event from './handler/event.js';
 import { Database } from './handler/database.js';
 
@@ -13,46 +12,48 @@ export const listen = async ({ bot, log }) => {
   bot.on('message', async (msg) => {
     const { chat: { id: chatId, type: chatType }, from: { id: userId, first_name: userName } } = msg;
 
-    // Get or create the group in the database
-    const group = db.getGroup(chatId);
-
+    // Create the object that will be passed to commands, replies, and events
     const object = {
       bot,
       msg,
       chatId,
       userId,
+      userName,
       log,
       db
     };
 
-    // User ranking logic
-    const newLevel = await db.rankUp(userId, userName);
-    if (newLevel) {
-      bot.sendMessage(chatId, `Congratulations ${newLevel.name}! You've reached level ${newLevel.level}!`);
-    }
-
-    // Check if the message is from a group
+    // Check if the message is from a group or supergroup
     if (chatType === 'group' || chatType === 'supergroup') {
+      const group = db.getGroup(chatId);  // Get or create the group by its ID
+
       // Update last activity for the group
       await db.updateGroup(chatId, (group) => {
         group.lastActivity = new Date().toISOString();
       });
 
-      // Check if only admin mode is enabled
+      // Handle 'onlyadmin' mode
       if (group.onlyadmin) {
         const chatMember = await bot.getChatMember(chatId, userId);
         if (!['creator', 'administrator'].includes(chatMember.status)) {
-          // If the user is not an admin and only admin mode is on, ignore the message
-          return;
+          return; // Ignore if the user is not an admin and 'onlyadmin' mode is enabled
         }
       }
+
+      // Execute command, reply, and event handlers for groups
+      command(object);
+      reply(object);
+      event(object);
+
+    } else if (chatType === 'private') {
+      // In private chats, don't record anything in the group database, just handle user interactions
+      command(object);
+      reply(object);
+      event(object);
     }
-    command(object);
-    reply(object);
-    event(object);
   });
 
-  // Optional: Periodically clean up inactive groups
+  // Periodically clean up inactive groups
   setInterval(async () => {
     const allGroupIds = db.getAllGroupIds();
     const now = new Date();
@@ -69,7 +70,7 @@ export const listen = async ({ bot, log }) => {
     }
   }, 24 * 60 * 60 * 1000); // Run once a day
 
-  // Save the database periodically
+  // Periodically save the database
   setInterval(() => {
     db.save();
   }, 5 * 60 * 1000); // Save every 5 minutes

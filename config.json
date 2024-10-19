@@ -3,7 +3,8 @@
   "polling": true,
   "port": 8080,
   "api": "https://ajiro-api.onrender.com",
-  "prefix": "-",
+  "ryzen": "https://api.ryzendesu.vip",
+  "prefix": "/",
   "symbols": "●",
   "owner": "Lance Ajiro",
   "admin": ["6488288986"]
