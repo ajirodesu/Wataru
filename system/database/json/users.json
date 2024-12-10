@@ -1,0 +1,34 @@
+{
+  "undefined": {
+    "exp": 6,
+    "level": 2,
+    "messageCount": 1,
+    "name": "Lance Ajiro",
+    "createdAt": "2024-10-19T00:34:24.936Z",
+    "updatedAt": "2024-10-19T00:35:10.888Z"
+  },
+  "6488288986": {
+    "exp": 266,
+    "level": 6,
+    "messageCount": 111,
+    "name": "Lance Ajiro 🍅",
+    "createdAt": "2024-10-19T00:37:03.428Z",
+    "updatedAt": "2024-12-08T07:17:03.603Z"
+  },
+  "7489028736": {
+    "exp": 1,
+    "level": 1,
+    "messageCount": 1,
+    "name": "Giovani augusto",
+    "createdAt": "2024-10-19T03:03:49.122Z",
+    "updatedAt": "2024-10-19T03:03:49.122Z"
+  },
+  "5846638420": {
+    "exp": 1,
+    "level": 1,
+    "messageCount": 1,
+    "name": "Ayan",
+    "createdAt": "2024-11-03T05:42:51.300Z",
+    "updatedAt": "2024-11-03T05:42:51.300Z"
+  }
+}

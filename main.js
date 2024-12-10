@@ -3,14 +3,19 @@ import path from 'path';
 import express from 'express';
 import chalk from 'chalk';
 import figlet from 'figlet';
-import log from './includes/utility/log.js';
-import { loadAll } from './includes/utility/utils.js';
-import bot from './includes/handler/login.js';
-import { listen } from './includes/listen.js';
+import log from './system/utility/log.js';
+import { loadAll } from './system/utility/utils.js';
+import config from './json/config.json' assert { type: 'json' };
+import api from './json/api.json' assert { type: 'json' };
+import { listen } from './system/listen.js';
+import bot from './system/handler/login.js';
 
 const app = express();
 const port = 8601;
 
+// Use the imported JSON directly
+global.config = config;
+global.api = api;
 global.bot = bot;
 global.utils = loadAll;
 global.client = {
@@ -34,15 +39,19 @@ const generateFiglet = async (text) => {
 };
 
 try {
-  // Using top-level await in ES2024
+  // Top-level await for modern ES2024 syntax
   const figletText = await generateFiglet('Wataru');
   console.log(chalk.blue(figletText));
-  
 
   const loadErrors = await loadAll();
 
   if (loadErrors) {
     log.error('Errors occurred while loading commands or events:', loadErrors);
+  }
+
+  // Check if `global.db` is properly initialized
+  if (!global.db || typeof global.db.getAllUserIds !== 'function' || typeof global.db.getAllGroupIds !== 'function') {
+    throw new Error('Database methods are not defined in global.db');
   }
 
   const totalUser = (await global.db.getAllUserIds()).length;
