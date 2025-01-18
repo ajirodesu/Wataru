@@ -1,17 +1,18 @@
 import axios from 'axios';
 
-export const config = {
+export const setup = {
   name: "waifu",
   aliases: [],
+  version: "0.0.1",
   author: "Lance Cochangco",
   description: "Fetches waifu images based on a search query.",
-  usage: ["<search query>"],
+  guide: ["<search query>"],
   cooldown: 0,
-  access: "anyone",
+  type: "anyone",
   category: "anime"
 };
 
-export const onCommand = async function({ message, bot, chatId, userId, args, log, usages }) {
+export const onStart = async function({ message, bot, chatId, userId, args, log, usages }) {
   try {
     const searchQuery = args.join(' '); // Combine arguments to form the search query
 

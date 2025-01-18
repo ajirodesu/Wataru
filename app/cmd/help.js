@@ -1,17 +1,18 @@
-export const config = {
+export const setup = {
   name: "help",
   aliases: ["h"],
+  version: "0.0.1",
   author: "AjiroDesu",
   description: "Displays help information for commands.",
-  usage: "<command|page|all>",
+  guide: "<command|page|all>",
   cooldown: 5,
-  access: "anyone",
+  type: "anyone",
   category: "system",
 };
 
 const COMMANDS_PER_PAGE = 10;
 
-export const onCommand = async function({ bot, chatId, userId, args }) {
+export const onStart = async function({ bot, chatId, userId, args }) {
   const { commands } = global.client;
   const { admin, prefix, symbols } = global.config;
   const cleanArg = args[0]?.toLowerCase();
@@ -68,7 +69,7 @@ function generateHelpMessage(commands, userId, admin, pageNumber, cleanArg, pref
 
   const start = (pageNumber - 1) * COMMANDS_PER_PAGE;
   const paginatedCommands = filteredCommands.slice(start, start + COMMANDS_PER_PAGE)
-    .map(cmd => `${symbols} ${prefix}${cmd.config.name}`);
+    .map(cmd => `${symbols} ${prefix}${cmd.setup.name}`);
 
   return {
     helpMessage: `List of Commands\n\n${paginatedCommands.join('\n')}\n\nPage: ${pageNumber}/${totalPages} \nTotal Cmds: ${totalCommands}`,
@@ -80,8 +81,8 @@ function getFilteredCommands(commands, userId, admin) {
   const isAdmin = admin.includes(userId.toString());
 
   return [...commands.values()].filter(cmd => {
-    const accessLevel = cmd.config.access || 'anyone';
-    const category = cmd.config.category || 'misc';
+    const accessLevel = cmd.setup.type || 'anyone';
+    const category = cmd.setup.category || 'misc';
     if (isAdmin) {
       // Admin/owner can see all commands
       return true;
@@ -98,14 +99,14 @@ function getFilteredCommands(commands, userId, admin) {
         category === 'administrator'
       );
     }
-  }).sort((a, b) => a.config.name.localeCompare(b.config.name));
+  }).sort((a, b) => a.setup.name.localeCompare(b.setup.name));
 }
 
 function generateAllCommandsMessage(filteredCommands, prefix, symbols) {
   const categories = filteredCommands.reduce((acc, cmd) => {
-    const category = cmd.config.category || "misc";
+    const category = cmd.setup.category || "misc";
     acc[category] = acc[category] || [];
-    acc[category].push(`│➥ ${prefix}${cmd.config.name}`);
+    acc[category].push(`│➥ ${prefix}${cmd.setup.name}`);
     return acc;
   }, {});
 
@@ -129,8 +130,8 @@ function generateCommandInfo(cmdInfo, prefix) {
   const aliases = cmdInfo.aliases?.length
     ? `Aliases:\n[ ${cmdInfo.aliases.join(", ")} ]`
     : "Aliases:\nNone";
-  const usageList = Array.isArray(cmdInfo.usage)
-    ? cmdInfo.usage.map(u => `\`${prefix}${cmdInfo.name} ${u}\``).join('\n')
+  const usageList = Array.isArray(cmdInfo.guide)
+    ? cmdInfo.guide.map(u => `\`${prefix}${cmdInfo.name} ${u}\``).join('\n')
     : `\`${prefix}${cmdInfo.name} ${cmdInfo.usage}\``;
 
   return `/${cmdInfo.name}  \n` // No underscores for formatting
@@ -138,7 +139,7 @@ function generateCommandInfo(cmdInfo, prefix) {
     + `Usage:\n${usageList}\n\n`
     + `Category:\n${cmdInfo.category}\n\n`
     + `Cooldowns:\n${cmdInfo.cooldown || 0} seconds\n\n`
-    + `Access:\n${cmdInfo.access}\n\n`
+    + `Type:\n${cmdInfo.type}\n\n`
     + `${aliases}`;
 }
 

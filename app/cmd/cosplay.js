@@ -1,17 +1,18 @@
 import axios from 'axios';
 
-export const config = {
+export const setup = {
   name: "cosplay",
   aliases: [],
+  version: "0.0.1",
   author: "Lance Cochangco",
   description: "Get a random cosplay video.",
-  usage: [""],
+  guide: [""],
   cooldown: 0,
-  access: "anyone",
+  type: "anyone",
   category: "anime"
 };
 
-export const onCommand = async function({ message, bot, chatId, log }) {
+export const onStart = async function({ message, bot, chatId, log }) {
   try {
     // Define the GitHub repository details
     const owner = 'ajirodesu';

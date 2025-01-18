@@ -1,17 +1,18 @@
 import axios from 'axios';
 
-export const config = {
+export const setup = {
   name: "schnell",
   aliases: ["flux-schnell"],
+  version: "0.0.1",
   author: "Lance Cochangco",
   description: "Generate and send a image based on user's prompt.",
-  usage: ["<prompt>"],
+  guide: ["<prompt>"],
   cooldown: 10,
-  access: "anyone",
+  type: "anyone",
   category: "AI"
 };
 
-export const onCommand = async function({ message, bot, chatId, args, log, usages }) {
+export const onStart = async function({ message, bot, chatId, args, log, usages }) {
   try {
     // Check if a prompt is provided
     if (args.length === 0) {

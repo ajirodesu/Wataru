@@ -1,17 +1,18 @@
 import axios from 'axios';
 
-export const config = {
+export const setup = {
   name: "waifuv2",
   aliases: [],
+  version: "0.0.1",
   author: "Ryzendesu",
   description: "Get a random SFW waifu image.",
-  usage: [""],
+  guide: [""],
   cooldown: 0,
-  access: "anyone",
+  type: "anyone",
   category: "anime"
 };
 
-export const onCommand = async function({ message, bot, chatId, log }) {
+export const onStart = async function({ message, bot, chatId, log }) {
   try {
     // Fetch the waifu image URL from the API
     const response = await axios.get(`${global.api.ryzen}/api/weebs/sfw-waifu`);

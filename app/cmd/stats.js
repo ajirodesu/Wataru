@@ -2,16 +2,17 @@ import os from 'os';
 import process from 'process';
 import axios from 'axios';
 
-export const config = {
+export const setup = {
   name: "stats",
   author: "Lance Ajiro",
+  version: "0.0.1",
   description: "Display bot statistics",
-  access: "anyone",
+  type: "anyone",
   category: "system",
-  usage: ""
+  guide: ""
 };
 
-export const onCommand = async function({ bot, chatId, log, db }) {
+export const onStart = async function({ bot, chatId, log, db }) {
   try {
     const uptime = process.uptime();
     const uptimeString = formatUptime(uptime);

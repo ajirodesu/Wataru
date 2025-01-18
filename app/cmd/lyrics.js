@@ -1,15 +1,16 @@
-export const config = {
+export const setup = {
   name: "lyrics",
   aliases: [],
+  version: "0.0.1",
   author: "Lance Cochangco",
   description: "Fetch complete song lyrics.",
-  usage: ["<song name>"],
+  guide: ["<song name>"],
   cooldown: 0,
-  access: "anyone",
+  type: "anyone",
   category: "music"
 };
 
-export const onCommand = async function({ message, bot, chatId, args, log, usages }) {
+export const onStart = async function({ message, bot, chatId, args, log, usages }) {
   try {
     // Check if the user provided a song name
     if (!args || args.length === 0) {

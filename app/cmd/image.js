@@ -3,16 +3,17 @@ import { promises as fsPromises } from 'fs'; // Promises version for async opera
 import fs from 'fs'; // Regular fs for createReadStream
 import path from 'path';
 
-export const config = {
+export const setup = {
   name: 'image',
   description: 'Search for images using Unsplash',
+  version: "0.0.1",
   author: 'Shinpei',
-  access: 'anyone',
-  usage: '[query]',
+  type: 'anyone',
+  guide: '[query]',
   category: 'media',
 };
 
-export const onCommand = async ({ bot, chatId, args }) => {
+export const onStart = async ({ bot, chatId, args }) => {
   try {
     const searchQuery = args.join(' ');
     if (!searchQuery) {

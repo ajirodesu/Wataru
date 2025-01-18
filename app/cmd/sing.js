@@ -2,14 +2,15 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 
-export const config = {
+export const setup = {
   name: "sing",
   aliases: [],
+  version: "0.0.1",
   author: "dipto",
   description: "Download audio from YouTube",
-  usage: ["<song name>|<song link>"],
+  guide: ["<song name>|<song link>"],
   cooldown: 5,
-  access: "anyone",
+  type: "anyone",
   category: "media"
 };
 
@@ -21,7 +22,7 @@ const baseApiUrl = async () => {
 };
 
 // Handling the command with args (either a song link or song name)
-export const onCommand = async ({ bot, message, chatId, userId, args, log, usages }) => {
+export const onStart = async ({ bot, message, chatId, userId, args, log, usages }) => {
   const checkurl = /^(?:https?:\/\/)?(?:m\.|www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))((\w|-){11})(?:\S+)?$/;
   let videoID;
   const urlYtb = checkurl.test(args[0]);

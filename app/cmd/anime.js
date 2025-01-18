@@ -1,17 +1,18 @@
 import axios from 'axios';
 
-export const config = {
+export const setup = {
   name: 'anime',
   aliases: ['animeinfo'],
+  version: '0.0.1',
   author: 'David',
   description: 'Fetches details about anime',
-  usage: ['[anime_name]'],
+  guide: ['[anime_name]'],
   cooldown: 5,
-  access: 'anyone',
+  type: 'anyone',
   category: 'anime',
 };
 
-export const onCommand = async function({ bot, chatId, args, usages, log }) {
+export const onStart = async function({ bot, chatId, args, usages, log }) {
   if (!args[0]) {
     return usages();
   }

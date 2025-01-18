@@ -1,15 +1,16 @@
-export const config = {
+export const setup = {
   name: "top",
   aliases: ["leaderboard"],
   author: "Assistant",
+  version: "0.0.1",
   description: "Display the top users by experience points.",
-  usage: ["", "<number>"],
+  guide: ["", "<number>"],
   cooldown: 10,
-  access: "anyone",
+  type: "anyone",
   category: "utility"
 };
 
-export const onCommand = async function({ message, bot, chatId, userId, args, log, db }) {
+export const onStart = async function({ message, bot, chatId, userId, args, log, db }) {
   try {
     let limit = 10; // Default limit
     if (args.length > 0) {

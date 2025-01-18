@@ -1,13 +1,14 @@
-export const config = {
+export const setup = {
   name: 'join',
+  version: '0.0.1',
   author: 'Lance Cochangco',
-  access: 'anyone',
+  type: 'anyone',
   description: 'Join a group where the bot is present.',
   category: 'Utility',
-  usage: ['join'],
+  guide: ['join'],
 };
 
-export const onCommand = async ({ bot, chatId, userId, msg, db }) => {
+export const onStart = async ({ bot, chatId, userId, msg, db }) => {
   await db.load();  // Ensure the database is loaded
 
   const groupIds = db.getAllGroupIds();  // Fetch all group IDs from the database

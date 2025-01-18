@@ -1,16 +1,17 @@
 import util from 'util';
 
-export const config = {
+export const setup = {
   name: 'eval',
+  version: '0.0.1',
   author: 'Shinpei',
-  access: 'admin',
+  type: 'admin',
   description: 'Execute JavaScript code (owner only)',
   category: 'owner',
-  usage: '<code>',
+  guide: '<code>',
   cooldown: 0,
 };
 
-export const onCommand = async function({ bot, chatId, userId, args, log, usages }) {
+export const onStart = async function({ bot, chatId, userId, args, log, usages }) {
   const code = args.join(' '); // Join arguments to form the code to execute
   if (!code) {
     return usages();

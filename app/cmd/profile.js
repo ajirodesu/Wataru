@@ -1,17 +1,18 @@
 import axios from 'axios';
 
-export const config = {
+export const setup = {
   name: "profile",
   aliases: [],
+  version: "0.0.1",
   author: "Samir",
   description: "Fetches profile image",
-  usage: ["profile [username|user_id]", "profile (reply to a user message)"],
+  guide: ["profile [username|user_id]", "profile (reply to a user message)"],
   cooldown: 0,
-  access: 'anyone',
+  type: 'anyone',
   category: "utility"
 };
 
-export const onCommand = async function({ bot, chatId, args, message }) {
+export const onStart = async function({ bot, chatId, args, message }) {
   let targetUserId = message.from.id;
   
   // Check if the command is a reply to another user's message

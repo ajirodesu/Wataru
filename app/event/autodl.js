@@ -11,9 +11,10 @@ const baseApiUrl = async () => {
 };
 
 // Define the bot command
-export const config = {
+export const setup = {
   name: "autodl",
   author: "Dipto",
+  version: "0.0.1",
   description: "Auto download video from TikTok, Facebook, Instagram, YouTube, and more.",
 };
 

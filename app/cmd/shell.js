@@ -8,18 +8,19 @@ if (!fs.existsSync(cacheDir)) {
   fs.mkdirSync(cacheDir);
 }
 
-export const config = {
+export const setup = {
   name: "shell",
   aliases: [],
+  version: "0.0.1",
   author: "Shinpei",
   description: "Access the shell",
-  usage: "<command>",
+  guide: "<command>",
   cooldown: 0,
-  access: 'admin',
+  type: 'admin',
   category: "owner"
 };
 
-export const onCommand = async function({ bot, chatId, userId, args, usages }) {
+export const onStart = async function({ bot, chatId, userId, args, usages }) {
   const command = args.join(' ');
   if (!command) {
     return usages();

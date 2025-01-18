@@ -1,15 +1,17 @@
 // Command configuration
-export const config = {
+export const setup = {
   name: "admin",
-  access: "anyone",
+  version: "0.0.1",
+  type: "anyone",
   category: "system",
   description: "Admin management command",
-  usage: "[add/list/remove]",
+  cooldown: 0,
+  guide: "[add/list/remove]",
   author: "AjiroDesu"
 };
 
 // Command initialization
-export const onCommand = async function ({ bot, chatId, message, args, usages }) {
+export const onStart = async function ({ bot, chatId, message, args, usages }) {
   // Access the admins directly from global.config
   let admins = global.config.admin || [];
   let command = args[0];

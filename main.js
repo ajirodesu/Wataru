@@ -6,6 +6,7 @@ import figlet from 'figlet';
 import log from './system/utility/log.js';
 import { loadAll } from './system/utility/utils.js';
 import config from './json/config.json' assert { type: 'json' };
+import vip from './json/vip.json' assert { type: 'json' };
 import api from './json/api.json' assert { type: 'json' };
 import { listen } from './system/listen.js';
 import bot from './system/handler/login.js';
@@ -16,6 +17,7 @@ const port = 8601;
 // Use the imported JSON directly
 global.config = config;
 global.api = api;
+global.vip = vip;
 global.bot = bot;
 global.utils = loadAll;
 global.client = {

@@ -1,15 +1,16 @@
-export const config = {
+export const setup = {
   name: "stalk",
   aliases: ["info", "userinfo"],
+  version: "0.0.1",
   author: "Lance Cochangco",
   description: "Get detailed information about a user with their profile picture.",
-  usage: ["", "@username", "replied to other user's message"],
-  access: 'anyone',
+  guide: ["", "@username", "replied to other user's message"],
+  type: 'anyone',
   cooldown: 5,
   category: "utility"
 };
 
-export const onCommand = async function({ message, bot, chatId, userId, args, log }) {
+export const onStart = async function({ message, bot, chatId, userId, args, log }) {
   try {
     let targetUser;
 

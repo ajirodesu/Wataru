@@ -1,17 +1,18 @@
 // Command configuration
-export const config = {
+export const setup = {
   name: "rank",
   aliases: ["level", "lvl"],
+  version: "0.0.1",
   author: "Lance Cochangco",
   description: "Retrieve your rank/level or the rank/level of the user you replied to.",
-  usage: ["", "replied to other user's message"],
+  guide: ["", "replied to other user's message"],
   cooldown: 0,
-  access: "anyone",
+  type: "anyone",
   category: "utility"
 };
 
 // Command logic
-export const onCommand = async function({ message, bot, chatId, userId, args, log, usages, db }) {
+export const onStart = async function({ message, bot, chatId, userId, args, log, usages, db }) {
   try {
     let targetUserId = message.from.id; // Default to the user who issued the command
     let targetUserFullName = `${message.from.first_name} ${message.from.last_name || ''}`.trim(); // Get the full name

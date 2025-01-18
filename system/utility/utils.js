@@ -21,12 +21,12 @@ export const loadAll = async function() {
                 const cmd = cmdModule.default || cmdModule;
                 if (!cmd) {
                     throw new Error('does not export anything');
-                } else if (!cmd.config) {
-                    throw new Error('does not export config');
-                } else if (!cmd.onCommand) {
-                    throw new Error('does not export onCommand');
+                } else if (!cmd.setup) {
+                    throw new Error('does not export setup');
+                } else if (!cmd.onStart) {
+                    throw new Error('does not export onStart');
                 }
-                global.client.commands.set(cmd.config.name, cmd);
+                global.client.commands.set(cmd.setup.name, cmd);
             } catch (error) {
                 log.error(`Error loading command ${file}: ${error.message}`);
                 errs[file] = error;
@@ -41,12 +41,12 @@ export const loadAll = async function() {
                 const evt = evtModule.default || evtModule;
                 if (!evt) {
                     throw new Error('does not export anything');
-                } else if (!evt.config) {
-                    throw new Error('does not export config');
+                } else if (!evt.setup) {
+                    throw new Error('does not export setup');
                 } else if (!evt.onEvent) {
-                    throw new Error('does not export event');
+                    throw new Error('does not export onEvent');
                 }
-                global.client.events.set(evt.config.name, evt);
+                global.client.events.set(evt.setup.name, evt);
             } catch (error) {
                 log.error(`Error loading event ${file}: ${error.message}`);
                 errs[file] = error;

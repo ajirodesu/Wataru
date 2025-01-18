@@ -1,15 +1,16 @@
-export const config = {
+export const setup = {
   name: "uid",
   aliases: [],
+  version: "0.0.1",
   author: "Lance Cochangco",
   description: "Get your own userId or the userId of the replied-to user.",
-  usage: ["", "replied to other user's message"],
+  guide: ["", "replied to other user's message"],
   cooldown: 0,
-  access: "anyone",
+  type: "anyone",
   category: "utility"
 };
 
-export const onCommand = async function({ message, bot, chatId, userId, args, log, usages }) {
+export const onStart = async function({ message, bot, chatId, userId, args, log, usages }) {
   try {
     let targetUserId = message.from.id; // Default to the user who issued the command
     

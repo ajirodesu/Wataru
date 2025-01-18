@@ -1,13 +1,14 @@
 import moment from "moment-timezone";
 
-export const config = {
+export const setup = {
   name: "callad",
   aliases: ["call"],
+  version: "0.0.1",
   author: "Lance Cochangco",
   description: "Send a message to bot admin",
-  usage: ["[message]"],
+  guide: ["[message]"],
   cooldown: 5,
-  access: "anyone",
+  type: "anyone",
   category: "communication"
 };
 
@@ -45,7 +46,7 @@ async function handleAdminReply({ bot, chatId, userId, msg, log, db, target, mes
   );
 
   global.client.replies.set(info.message_id, {
-    commandName: config.name,
+    commandName: setup.name,
     type: "userReply",
     messageId: info.message_id,
     author: userId,
@@ -83,7 +84,7 @@ async function handleUserReply({ bot, chatId, userId, msg, log, db, author, time
   await bot.sendMessage(chatId, `${global.config.symbols} Your reply has been sent to the admin.`);
 }
 
-export const onCommand = async function({ message, bot, chatId, userId, args, log, db, timeZone }) {
+export const onStart = async function({ message, bot, chatId, userId, args, log, db, timeZone }) {
   try {
     const reportMessage = args.join(" ").trim();
 
@@ -138,7 +139,7 @@ Reply to this message to respond to the user.`
       throw new Error("Failed to send your message to any admin.");
     }
   } catch (err) {
-    log.error("Error in onCommand handler:", err);
+    log.error("Error in onStart handler:", err);
     await bot.sendMessage(chatId, `❌ | Error: ${err.message}`);
   }
 };

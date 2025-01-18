@@ -2,18 +2,19 @@ import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
 
-export const config = {
+export const setup = {
   name: "animesticker",
   aliases: [],
+  version: "0.0.1",
   author: "Lance Cochangco",
   description: "Fetch a random anime sticker",
-  usage: [""],
+  guide: [""],
   cooldown: 0,
-  access: "anyone",
+  type: "anyone",
   category: "anime"
 };
 
-export const onCommand = async function({ message, bot, chatId, userId, args, log, usages }) {
+export const onStart = async function({ message, bot, chatId, userId, args, log, usages }) {
   try {
     const url = encodeURI('https://raw.githubusercontent.com/Kira-Master/database/main/sticker/animestick.json');
 

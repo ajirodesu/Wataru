@@ -1,15 +1,16 @@
-export const config = {
+export const setup = {
   name: "notify",
   aliases: [],
+  version: "0.0.1",
   author: "Lance Ajiro",
   description: "Send a notification to all chat groups",
-  usage: ["[message]"],
+  guide: ["[message]"],
   cooldown: 0,
-  access: "admin",
+  type: "admin",
   category: "owner",
 };
 
-export const onCommand = async function({ message, bot, chatId, userId, args, log, usages, db }) {
+export const onStart = async function({ message, bot, chatId, userId, args, log, usages, db }) {
   try {
     const notificationMessage = args.join(' ');
     if (!notificationMessage) {

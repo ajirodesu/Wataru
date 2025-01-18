@@ -1,17 +1,18 @@
 import axios from "axios";
 
-export const config = {  
+export const setup = {  
   name: "pinterest",  
   aliases: ["pint"],  
+  version: "0.0.1",
   author: "Lance Cochangco",  
   description: "Search for Pinterest images and send them as a media group.",  
-  usage: ["<query>"],  
+  guide: ["<query>"],  
   cooldown: 0,  
-  access: "anyone",  
+  type: "anyone",  
   category: "media"  
 };
 
-export const onCommand = async function({ message, bot, chatId, args, log, usages }) {  
+export const onStart = async function({ message, bot, chatId, args, log, usages }) {  
   try {  
     // Check if a query is provided  
     if (args.length === 0) {  

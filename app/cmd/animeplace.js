@@ -1,17 +1,18 @@
 import axios from 'axios';
 
-export const config = {
+export const setup = {
   name: "animeplace",
   aliases: [],
+  version: "0.0.1",
   author: "Đức tài cuti vcl",
   description: "get a random anime place photo",
-  usage: [""],
+  guide: [""],
   cooldown: 0,
-  access: "anyone",
+  type: "anyone",
   category: "anime"
 };
 
-export const onCommand = async function({ message, bot, chatId, log }) {
+export const onStart = async function({ message, bot, chatId, log }) {
   try {
     // Fetch cosplay data from the API
     const response = await axios.get('https://raw.githubusercontent.com/ajirodesu/Rest-Api-Assets/refs/heads/main/txt/animeplace.js');

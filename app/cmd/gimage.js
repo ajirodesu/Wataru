@@ -1,17 +1,18 @@
 import axios from 'axios';
 
-export const config = {
+export const setup = {
   name: "gimage",
   aliases: [],
+  version: "0.0.1",
   author: "Ryzendesu",
   description: "Searches for landscape images.",
-  usage: ["<query>"],
+  guide: ["<query>"],
   cooldown: 0,
-  access: "anyone",
+  type: "anyone",
   category: "media"
 };
 
-export const onCommand = async function({ message, bot, chatId, args, log, usages }) {
+export const onStart = async function({ message, bot, chatId, args, log, usages }) {
   try {
     // Check if the user provided a search query
     if (args.length === 0) {

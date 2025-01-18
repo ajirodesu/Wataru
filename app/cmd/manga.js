@@ -1,17 +1,18 @@
 import axios from 'axios';
 
-export const config = {
+export const setup = {
   name: "manga",
   aliases: [],
+  version: "0.0.1",
   author: "Ryzendesu",
   description: "Get manga information from a query.",
-  usage: ["<manga_name>"],
+  guide: ["<manga_name>"],
   cooldown: 0,
-  access: "anyone",
+  type: "anyone",
   category: "anime"
 };
 
-export const onCommand = async function({ message, bot, chatId, args, log, usages }) {
+export const onStart = async function({ message, bot, chatId, args, log, usages }) {
   try {
     // Check if the user provided a manga name
     if (args.length === 0) {

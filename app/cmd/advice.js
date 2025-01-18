@@ -1,17 +1,18 @@
 import axios from 'axios';
 
-export const config = {
+export const setup = {
   name: "advice",
   aliases: [],
+  version: "0.0.1",
   author: "Lance Cochangco", // Change this to your name
   description: "Fetches a random piece of advice.",
-  usage: [""],
+  guide: [""],
   cooldown: 0,
-  access: "anyone",
+  type: "anyone",
   category: "utility"
 };
 
-export const onCommand = async function({ message, bot, chatId, userId, log }) {
+export const onStart = async function({ message, bot, chatId, userId, log }) {
   try {
     const response = await axios.get('https://api.adviceslip.com/advice');
 

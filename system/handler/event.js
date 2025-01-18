@@ -3,9 +3,9 @@ export const event = async ({ bot, msg, chatId, userId, log, db }) => {
 
   try {
     // Iterate over each event in the events map
-    for (const { config, onEvent } of events.values()) {
+    for (const { setup, onEvent } of events.values()) {
       // Ensure the event has a valid configuration and handler
-      if (config?.name && typeof onEvent === 'function') {
+      if (setup?.name && typeof onEvent === 'function') {
         await onEvent({
           bot,
           msg,

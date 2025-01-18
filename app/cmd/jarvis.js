@@ -1,17 +1,18 @@
 import fetch from 'node-fetch';
 
-export const config = {
+export const setup = {
   name: "jarvis",
   aliases: [],
+  version: "0.0.1",
   author: "Lance Cochangco",
   description: "Get a response from Jarvis",
-  usage: ["[question]"],
+  guide: ["[question]"],
   cooldown: 0,
-  access: "anyone",
+  type: "anyone",
   category: "ai"
 };
 
-export const onCommand = async function({ message, bot, chatId, args, log, usages }) {
+export const onStart = async function({ message, bot, chatId, args, log, usages }) {
   try {
     // Define the "best" model and system prompt
     const model = "gpt-4-turbo-2024-04-09"; // Hardcoded best model version

@@ -2,9 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
 
-export const config = {
+export const setup = {
   name: 'welcome',
+  version: '0.0.1',
   description: 'Handles new members joining the group and sends welcome messages.',
+  author: 'Ajirodesu'
 };
 
 export const onEvent = async ({ bot, chatId, msg, log, db }) => {

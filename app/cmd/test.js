@@ -1,13 +1,15 @@
-export const config = {
+export const setup = {
   name: 'example',
   aliases: ['test', 'ex'],
+  version: '0.0.1',
   description: 'This is an example command with reply functionality',
-  access: 'anyone', // Anyone can use this command
-  usage: '[argument]',
+  author: "Lance Cochangco",
+  type: 'anyone', // Anyone can use this command
+  guide: '[argument]',
   cooldown: 5, // 5 seconds cooldown
 };
 
-export const onCommand = async ({ bot, chatId, userId, msg, args, usages }) => {
+export const onStart = async ({ bot, chatId, userId, msg, args, usages }) => {
   if (args.length === 0) {
     return usages();
   }
@@ -44,4 +46,4 @@ export const onReply = async ({ bot, chatId, userId, msg, data }) => {
     console.error('Error in example reply handler:', error);
     bot.sendMessage(chatId, 'An error occurred while processing your reply. Please try again later.');
   }
-};
+}; 

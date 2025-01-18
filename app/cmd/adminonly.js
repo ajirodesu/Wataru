@@ -1,15 +1,16 @@
-export const config = {
+export const setup = {
   name: "onlyadmin",
   aliases: ["adminonly"],
+  version: "0.0.1",
   author: "Assistant",
   description: "Toggle only admin mode for the group.",
-  usage: ["on", "off"],
+  guide: ["on", "off"],
   cooldown: 5,
-  access: "administrator",
+  type: "administrator",
   category: "administrator"
 };
 
-export const onCommand = async function({ bot, msg, chatId, db, args, usages }) {
+export const onStart = async function({ bot, msg, chatId, db, args, usages }) {
   try {
     const group = db.getGroup(chatId);
 

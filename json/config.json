@@ -1,8 +1,8 @@
 {
-  "token": "7481020080:AAEI38AoxWgk_HQfddVDo3QAaRYzC2oLFTo",
+  "token": "7152230397:AAE_L7aqJIVp389k5Py_kMJkeoi_va7kIso",
   "polling": true,
   "port": 8080,
-  "prefix": "/",
+  "prefix": "-",
   "symbols": "●",
   "owner": "Lance Ajiro",
   "admin": [
