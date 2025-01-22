@@ -1,173 +1,102 @@
-import fs from 'fs';
-import bot from './login.js';
-
-export const help = {
-  reply_markup: {
-    inline_keyboard: [
-      [
-        {
-          text: 'View Commands',
-          callback_data: JSON.stringify({ command: 'help', page: 1 }),
-        },
-      ],
-    ],
-  },
-};
-
-global.help = help;
-
-// Ensure `vip.json` only contains an array of user IDs
-try {
-  global.vip = JSON.parse(fs.readFileSync('./setup/vip.json', 'utf-8')) || [];
-  if (!Array.isArray(global.vip)) {
-    throw new Error('Invalid VIP format. VIP data must be an array of user IDs.');
-  }
-} catch (err) {
-  console.error('Failed to load VIP data:', err.message);
-  global.vip = [];
-}
-
-export const command = async ({ bot, msg, chatId, userId, log, db }) => {
+export const command = async ({ bot, msg, chatId, userId, userName, log, db }) => {
   const { commands, cooldowns } = global.client;
   const { admin, prefix } = global.config;
 
-  const sendHelpButton = async (bot, chatId, message) => {
-    return bot.sendMessage(chatId, message, { reply_markup: help.reply_markup });
-  };
-
-  const botInfo = await bot.getMe();
-  const botUsername = botInfo.username;
-
-  const prefixRegex = new RegExp(`^(${prefix}|@${botUsername}\\s*)`, 'i');
-  const prefixMatch = msg.text?.trim().match(prefixRegex);
-
-  if (!prefixMatch) return;
-
-  const usedPrefix = prefixMatch[0];
-  const [fullCommand, ...args] = msg.text.trim().slice(usedPrefix.length).split(/\s+/);
-  const [commandName, targetUsername] = fullCommand.split('@');
-  const cleanCommandName = commandName?.toLowerCase();
-
-  if (targetUsername && targetUsername.toLowerCase() !== botUsername.toLowerCase()) return;
-
-  if (!cleanCommandName) {
-    return sendHelpButton(bot, chatId, `Please specify a command. Click the button below to view available commands.`);
-  }
-
-  const cmdFile = commands.get(cleanCommandName) ||
-    [...commands.values()].find(cmd =>
-      Array.isArray(cmd.setup?.aliases) && cmd.setup.aliases.map(a => a.toLowerCase()).includes(cleanCommandName)
-    );
-
-  if (!cmdFile) {
-    return sendHelpButton(bot, chatId, `The command "${cleanCommandName}" does not exist. Click the button below to view available commands.`);
-  }
-
-  const { setup, onStart } = cmdFile;
-
-  const hasAccess = async (accessLevel) => {
-    switch (accessLevel) {
-      case 'anyone':
-        return { hasAccess: true };
-
-      case 'group': {
-        const isGroup = msg.chat.type.endsWith('group');
-        return isGroup
-          ? { hasAccess: true }
-          : { hasAccess: false, message: `The command "${cleanCommandName}" can only be used in groups.` };
-      }
-
-      case 'private': {
-        const isPrivate = msg.chat.type === 'private';
-        return isPrivate
-          ? { hasAccess: true }
-          : { hasAccess: false, message: `The command "${cleanCommandName}" can only be used in private chats.` };
-      }
-
-      case 'administrator': {
-        const chatAdmins = await bot.getChatAdministrators(chatId);
-        const isAdmin = chatAdmins.some(admin => admin.user.id === userId);
-        return isAdmin
-          ? { hasAccess: true }
-          : { hasAccess: false, message: `You don't have permission to use "${cleanCommandName}". Only group admins can use it.` };
-      }
-
-      case 'vip': {
-        const isVip = global.vip.includes(userId.toString());
-        return isVip
-          ? { hasAccess: true }
-          : { hasAccess: false, message: `The command "${cleanCommandName}" is restricted to VIP users.` };
-      }
-
-      case 'admin': {
-        const isAdmin = admin.includes(userId.toString());
-        return isAdmin
-          ? { hasAccess: true }
-          : { hasAccess: false, message: `The command "${cleanCommandName}" is restricted to the bot creator/operator.` };
-      }
-
-      default:
-        return { hasAccess: false, message: `Invalid access level for command "${cleanCommandName}".` };
-    }
-  };
-
-  const type = await hasAccess(setup?.type || 'anyone');
-  if (!type.hasAccess) {
-    return bot.sendMessage(chatId, type.message);
-  }
-
-  const now = Date.now();
-  const cooldownKey = `${userId}_${cleanCommandName}`;
-  const cooldownTime = setup?.cooldown ?? 0;
-  const cooldownExpiration = cooldowns.get(cooldownKey) ?? 0;
-
-  if (now < cooldownExpiration) {
-    const secondsLeft = Math.ceil((cooldownExpiration - now) / 1000);
-    return bot.sendMessage(chatId, `Please wait ${secondsLeft}s before using this command again.`);
-  }
-
-  cooldowns.set(cooldownKey, now + cooldownTime * 1000);
-
   try {
-    await onStart({
-      cmdName: cleanCommandName,
-      message: msg,
-      chatId,
-      userId,
-      bot,
-      args,
-      log,
-      usages: () => {},
-      help,
-      db,
-    });
-  } catch (error) {
-    log.error(error);
-    await bot.sendMessage(chatId, `An error occurred while executing the command: ${error.message}`);
-  }
-};
+    if (!msg?.text || !commands || !cooldowns) return;
 
-const handleCallbackQuery = async (callbackQuery) => {
-  const {
-    message: { chat: { id: chatId }, message_id: messageId },
-    from: { id: userId },
-    data,
-  } = callbackQuery;
+    const [rawCommand, ...args] = msg.text.trim().split(/\s+/);
+    const command = rawCommand.toLowerCase();
+    const hasPrefix = command.startsWith(prefix);
+    const commandName = hasPrefix ? command.slice(prefix.length) : command;
 
-  const { command: commandName, ...extraData } = JSON.parse(data);
-
-  if (commandName === 'help') {
-    const helpCommand = global.client.commands.get('help');
-    if (helpCommand?.onButton) {
-      await helpCommand.onButton({ bot, chatId, userId, data: { ...extraData, message_id: messageId } });
-    } else {
-      await bot.answerCallbackQuery(callbackQuery.id, { text: 'Help command is unavailable.', show_alert: true });
+    // Handle case where only the prefix is typed
+    if (hasPrefix && !commandName) {
+      return bot.sendMessage(chatId, `⚠️ | It seems you just typed the prefix "${prefix}" without a command. Try ${prefix}help to see available commands.`);
     }
-  } else {
-    await bot.answerCallbackQuery(callbackQuery.id, { text: 'Unknown callback action.', show_alert: true });
+
+    if (command === "prefix") return bot.sendMessage(chatId, `Current prefix: ${prefix}`);
+
+    const cmdFile = commands.get(commandName);
+    if (!cmdFile) {
+      if (hasPrefix) bot.sendMessage(chatId, `❌ | Command "${commandName}" not found. Use ${prefix}help.`);
+      return;
+    }
+
+    const { setup = {} } = cmdFile;
+    if (!setup.name || !setup.type) throw new Error(`Invalid command configuration for "${commandName}"`);
+
+    // Always validate chat type, even for bot admins
+    if (!await validateChatType(setup.type, msg.chat.type, bot, chatId)) return;
+
+    // Skip other restrictions (permissions and cooldowns) for bot admins
+    if (!admin.includes(Number(userId))) {
+      if (!await validatePermissions(setup.type, { bot, chatId, userId, db, admin })) return;
+      if (setup.prefix !== false && !hasPrefix) return;
+
+      const cooldownSuccess = await handleCooldown({ userId, commandName, setup, cooldowns, bot, chatId });
+      if (!cooldownSuccess) return;
+    }
+
+    await cmdFile.onStart({ cmdName: commandName, bot, msg, chatId, userId, username: userName, db, args, log, setup, cooldowns });
+
+  } catch (error) {
+    log.error(`Error: ${error.message}`);
+    bot.sendMessage(chatId, `❌ | ${error.message}`);
   }
 };
 
-bot.on('callback_query', handleCallbackQuery);
+/**
+ * Validates chat type for command
+ */
+async function validateChatType(commandType, chatType, bot, chatId) {
+  const errors = {
+    group: '❌ | Command only for groups',
+    private: '❌ | Command only for private chats'
+  };
+  if ((commandType === 'group' && chatType === 'private') || (commandType === 'private' && chatType !== 'private')) {
+    await bot.sendMessage(chatId, errors[commandType]);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Validates permissions
+ */
+async function validatePermissions(commandType, { bot, chatId, userId, db, admin }) {
+  if (commandType === 'administrator') {
+    const member = await bot.getChatMember(chatId, userId);
+    if (!['creator', 'administrator'].includes(member.status)) {
+      await bot.sendMessage(chatId, '❌ | Admin privileges required');
+      return false;
+    }
+  } else if (commandType === 'vip' && !db.getUser(userId)?.vip) {
+    await bot.sendMessage(chatId, '❌ | VIP status required');
+    return false;
+  } else if (commandType === 'admin' && !admin.includes(Number(userId))) {
+    await bot.sendMessage(chatId, '❌ | Restricted to bot admins');
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Handles command cooldown
+ */
+async function handleCooldown({ userId, commandName, setup, cooldowns, bot, chatId }) {
+  const now = Date.now();
+  const key = `${userId}_${commandName}`;
+  const cooldownTime = setup.cooldown || 0;
+
+  if (cooldowns[key] && now < cooldowns[key]) {
+    const timeLeft = Math.ceil((cooldowns[key] - now) / 1000);
+    await bot.sendMessage(chatId, `❌ | Cooldown active: ${timeLeft}s left`);
+    return false;
+  }
+
+  if (cooldownTime > 0) cooldowns[key] = now + cooldownTime * 1000;
+  return true;
+}
 
 export default command;
