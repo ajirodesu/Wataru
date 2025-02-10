@@ -1,7 +1,6 @@
 {
   "name": "wataru",
   "version": "1.0.0",
-  "type": "module",
   "description": "A simple Telegram Bot made by AjiroDesu",
   "main": "index.js",
   "scripts": {
@@ -14,14 +13,10 @@
     "@nechlophomeriaa/spotifydl": "^1.0.4",
     "@types/node": "^18.0.6",
     "axios": "^1.7.7",
-    "canvas": "^2.11.2",
-    "chalk": "^5.3.0",
-    "express": "^4.21.0",
-    "figlet": "^1.7.0",
+    "body-parser": "^1.20.3",
+    "express": "^4.21.2",
     "fs-extra": "^11.2.0",
     "moment-timezone": "^0.5.45",
-    "node-telegram-bot-api": "^0.63.0",
-    "sharp": "^0.33.5",
-    "vm": "^0.1.0"
+    "node-telegram-bot-api": "^0.63.0"
   }
 }

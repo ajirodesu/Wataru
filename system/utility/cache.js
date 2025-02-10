@@ -1,19 +1,17 @@
-// cache.js
-import fs from 'fs';
-import path from 'path';
-import log from './log.js';
+const fs = require('fs');
+const path = require('path');
 
 const cacheDir = path.join(process.cwd(), 'app/temp');
 
-export const create = async () => {
+const create = async () => {
   try {
     await fs.promises.mkdir(cacheDir, { recursive: true });
   } catch (err) {
-    log.error(`Error creating cache directory: ${err.message}`);
+    console.error(`Error creating cache directory: ${err.message}`);
   }
 };
 
-export const clear = async () => {
+const clear = async () => {
   try {
     const files = await fs.promises.readdir(cacheDir);
     if (files.length) {
@@ -23,39 +21,53 @@ export const clear = async () => {
           await fs.promises.unlink(filePath);
           return file;
         } catch (err) {
-          log.error(`Error deleting file: ${filePath} - ${err.message}`);
+          console.error(`Error deleting file: ${filePath} - ${err.message}`);
           return null;
         }
       });
 
       const deletedFiles = (await Promise.all(deletePromises)).filter(Boolean);
       if (deletedFiles.length) {
-        log.system(`${deletedFiles.length} cache files have been cleared: ${deletedFiles.join(', ')}`);
+        console.log(`${deletedFiles.length} cache files have been cleared: ${deletedFiles.join(', ')}`);
       }
     }
   } catch (err) {
-    log.error(`Error clearing cache: ${err.message}`);
+    console.error(`Error clearing cache: ${err.message}`);
   }
 };
 
-export const watch = async () => {
+const watch = async () => {
   try {
     await create(); // Ensure cache directory exists before watching
     fs.watch(cacheDir, (eventType, filename) => {
       if (eventType === 'rename' && filename) {
         setTimeout(async () => {
-          const files = await fs.promises.readdir(cacheDir);
-          if (files.length) {
-            log.system(`${files.length} cache files detected. Clearing cache now.`);
-            await clear();
+          try {
+            const files = await fs.promises.readdir(cacheDir);
+            if (files.length) {
+              console.log(`${files.length} cache files detected. Clearing cache now.`);
+              await clear();
+            }
+          } catch (err) {
+            console.error(`Error reading cache directory: ${err.message}`);
           }
         }, 5000); // 5-second delay before detecting
       }
     });
   } catch (err) {
-    log.error(`Error watching cache directory: ${err.message}`);
+    console.error(`Error watching cache directory: ${err.message}`);
   }
 };
 
-await create();
-await watch();
+// Immediately initialize the cache and start watching
+(async () => {
+  await create();
+  await watch();
+})();
+
+// Export the functions so they can be used elsewhere if needed.
+module.exports = {
+  create,
+  clear,
+  watch,
+};

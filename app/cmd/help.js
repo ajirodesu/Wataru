@@ -1,4 +1,4 @@
-export const setup = {
+exports.setup = {
   name: "help",
   aliases: ["h"],
   version: "0.0.1",
@@ -6,17 +6,35 @@ export const setup = {
   description: "Displays help information for commands.",
   guide: "<command|page|all>",
   cooldown: 5,
-  prefix: false,
+  prefix: "both",
   type: "anyone",
   category: "system",
 };
 
 const COMMANDS_PER_PAGE = 10;
 
-export const onStart = async function({ bot, chatId, userId, args }) {
+exports.onStart = async function({ bot, chatId, userId, args, msg }) {
   const { commands } = global.client;
   const { admin, prefix, symbols } = global.config;
+  const vipUsers = global.vip.uid.includes(userId);
+  const senderID = String(msg.from.id);
+  const chatType = msg.chat.type;
+
   const cleanArg = args[0]?.toLowerCase();
+
+  // Determine if the sender is a bot admin
+  const isBotAdmin = admin.includes(senderID);
+  let isGroupAdmin = false;
+
+  // If the chat is a group or supergroup, check if the sender is a group admin
+  if (["group", "supergroup"].includes(chatType)) {
+    try {
+      const member = await bot.getChatMember(chatId, senderID);
+      isGroupAdmin = member.status === "administrator" || member.status === "creator";
+    } catch (err) {
+      isGroupAdmin = false; // Default to not an admin if error occurs
+    }
+  }
 
   // Display command-specific help if the argument matches a command name
   if (cleanArg && commands.has(cleanArg)) {
@@ -27,33 +45,88 @@ export const onStart = async function({ bot, chatId, userId, args }) {
 
   // Handle pagination or "all" argument
   const pageNumber = Math.max(1, parseInt(cleanArg) || 1);
-  const { helpMessage } = generateHelpMessage(
+  const { helpMessage, replyMarkup } = generateHelpMessage(
     commands,
-    userId,
-    admin,
+    senderID,
+    isBotAdmin,
+    isGroupAdmin,
     pageNumber,
     cleanArg,
     prefix,
-    symbols
+    symbols,
+    vipUsers,
+    chatType
   );
 
-  await bot.sendMessage(chatId, helpMessage, { parse_mode: "Markdown" });
+  const helpMsg = await bot.sendMessage(chatId, helpMessage, { parse_mode: "Markdown", reply_markup: replyMarkup });
+
+  bot.on('callback_query', async (query) => {
+    if (query.message.message_id !== helpMsg.message_id) return;
+
+    const callbackData = query.data;
+    const pageMatch = callbackData.match(/^help:(\d+)$/);
+
+    if (pageMatch) {
+      const newPageNumber = parseInt(pageMatch[1]);
+      const { helpMessage: newHelpMessage, replyMarkup: newReplyMarkup } = generateHelpMessage(
+        commands,
+        senderID,
+        isBotAdmin,
+        isGroupAdmin,
+        newPageNumber,
+        cleanArg,
+        prefix,
+        symbols,
+        vipUsers,
+        chatType
+      );
+
+      await bot.editMessageText(newHelpMessage, {
+        chat_id: chatId,
+        message_id: helpMsg.message_id,
+        parse_mode: "Markdown",
+        reply_markup: newReplyMarkup,
+      });
+    }
+
+    await bot.answerCallbackQuery(query.id);
+  });
 };
 
-function generateHelpMessage(commands, userId, admin, pageNumber, cleanArg, prefix, symbols) {
-  const filteredCommands = getFilteredCommands(commands, userId, admin);
+function generateHelpMessage(
+  commands,
+  senderID,
+  isBotAdmin,
+  isGroupAdmin,
+  pageNumber,
+  cleanArg,
+  prefix,
+  symbols,
+  vipUsers,
+  chatType
+) {
+  const filteredCommands = getFilteredCommands(
+    commands,
+    senderID,
+    isBotAdmin,
+    isGroupAdmin,
+    vipUsers,
+    chatType
+  );
   const totalCommands = filteredCommands.length;
   const totalPages = Math.ceil(totalCommands / COMMANDS_PER_PAGE);
 
   if (cleanArg === "all" || cleanArg === "-all" || cleanArg === "-a") {
     return {
       helpMessage: generateAllCommandsMessage(filteredCommands, prefix, symbols),
+      replyMarkup: {},
     };
   }
 
   if (pageNumber > totalPages) {
     return {
       helpMessage: `Invalid page number. Please use a number between 1 and ${totalPages}.`,
+      replyMarkup: {},
     };
   }
 
@@ -62,25 +135,52 @@ function generateHelpMessage(commands, userId, admin, pageNumber, cleanArg, pref
     .slice(start, start + COMMANDS_PER_PAGE)
     .map((cmd) => `${symbols} ${prefix}${cmd.setup.name}`);
 
-  return {
-    helpMessage: `📜 *Command List*\n\n${paginatedCommands.join("\n")}\n\n*Page:* ${pageNumber}/${totalPages}\n*Total Commands:* ${totalCommands}`,
+  const helpMessage = `📜 *Command List*\n\n${paginatedCommands.join("\n")}\n\n*Page:* ${pageNumber}/${totalPages}\n*Total Commands:* ${totalCommands}`;
+
+  const replyMarkup = {
+    inline_keyboard: [
+      [
+        pageNumber > 1 ? { text: '◀️', callback_data: `help:${pageNumber - 1}` } : null,
+        pageNumber < totalPages ? { text: '▶️', callback_data: `help:${pageNumber + 1}` } : null,
+      ].filter(Boolean), // Removes null values (for invisible buttons)
+    ],
   };
+
+  return { helpMessage, replyMarkup };
 }
 
-function getFilteredCommands(commands, userId, admin) {
-  const isAdmin = admin.includes(userId.toString());
-
+function getFilteredCommands(
+  commands,
+  senderID,
+  isBotAdmin,
+  isGroupAdmin,
+  vipUsers,
+  chatType
+) {
   return [...commands.values()]
     .filter((cmd) => {
-      const accessLevel = cmd.setup.type || "anyone";
-      const category = cmd.setup.category || "misc";
-      if (isAdmin) {
-        return true; // Admins see all commands
+      let isCommandAvailable = true;
+
+      if (!isBotAdmin) {
+        // Filter by access type
+        if (cmd.setup.type === "admin" && !isBotAdmin) {
+          isCommandAvailable = false;
+        }
+        if (cmd.setup.type === "vip" && !vipUsers) {
+          isCommandAvailable = false;
+        }
+        if (cmd.setup.type === "administrator" && !isGroupAdmin) {
+          isCommandAvailable = false;
+        }
+        if (cmd.setup.type === "group" && !["group", "supergroup"].includes(chatType)) {
+          isCommandAvailable = false;
+        }
+        if (cmd.setup.type === "private" && chatType !== "private") {
+          isCommandAvailable = false;
+        }
       }
-      if (accessLevel === "administrator") {
-        return false; // Exclude commands for admins or owners
-      }
-      return true;
+
+      return isCommandAvailable;
     })
     .sort((a, b) => a.setup.name.localeCompare(b.setup.name));
 }

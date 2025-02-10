@@ -1,25 +1,26 @@
-import axios from 'axios';
+const axios = require('axios');
 
-export const setup = {
+exports.setup = {
   name: "cosplay",
   aliases: [],
   version: "0.0.1",
   author: "Lance Cochangco",
   description: "Get a random cosplay video.",
   guide: [""],
+  prefix: "both",
   cooldown: 0,
-  type: "anyone",
+  type: "vip",
   category: "anime"
 };
 
-export const onStart = async function({ message, bot, chatId, log }) {
+exports.onStart = async function({ msg, bot, chatId, log }) {
   try {
     // Define the GitHub repository details
     const owner = 'ajirodesu';
     const repo = 'cosplay';
     const branch = 'main'; // Use the correct branch if it's different from 'main'
-    
-    // Construct the raw URL for the root of the repository
+
+    // Construct the GitHub URL for the repository directory
     const repoUrl = `https://github.com/${owner}/${repo}/tree/${branch}/`;
 
     // Scrape the directory to fetch video file names
@@ -32,7 +33,7 @@ export const onStart = async function({ message, bot, chatId, log }) {
     let match;
 
     while ((match = videoFileRegex.exec(html)) !== null) {
-        videoFiles.push(match[1]);
+      videoFiles.push(match[1]);
     }
 
     if (videoFiles.length === 0) {
@@ -49,7 +50,6 @@ export const onStart = async function({ message, bot, chatId, log }) {
 
     // Send the random cosplay video to the chat
     await bot.sendVideo(chatId, videoUrl, { caption: "Here's a random cosplay video!" });
-
   } catch (error) {
     log.error("Error fetching random video: " + error);
     // Send error message to the chat if the API request fails

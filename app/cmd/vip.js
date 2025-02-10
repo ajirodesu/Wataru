@@ -3,12 +3,11 @@ const path = require('path');
 
 // Command configuration
 exports.setup = {
-  name: "admin",
-  aliases: ["admins", "ad"],
+  name: "vip",
   version: "0.0.1",
   type: "anyone",
   category: "system",
-  description: "Admin management command",
+  description: "VIP management command",
   cooldown: 0,
   guide: "[add/list/remove]",
   author: "AjiroDesu"
@@ -16,19 +15,20 @@ exports.setup = {
 
 // Command initialization
 exports.onStart = async function ({ bot, chatId, msg, args, usages }) {
-  // Define the path to the config.json file in the json folder
-  const configPath = path.join(process.cwd(), 'json', 'config.json');
-
-  // Read the config file
-  let config;
+  // Define the path to the vip.json file in the json folder
+  const vipPath = path.join(process.cwd(), 'json', 'vip.json');
+  
+  // Read the vip file
+  let vip;
   try {
-    config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    vip = JSON.parse(fs.readFileSync(vipPath, 'utf8'));
   } catch (error) {
-    console.error("Error reading config.json:", error);
-    return bot.sendMessage(chatId, "An error occurred while accessing the admin list.");
+    console.error("Error reading vip.json:", error);
+    return bot.sendMessage(chatId, "An error occurred while accessing the VIP list.");
   }
 
-  let admins = config.admin || [];
+  let vipList = vip.uid || [];
+  let admins = global.config.admin || [];
   let command = args[0];
   let targetId = args[1] || (msg.reply_to_message ? msg.reply_to_message.from.id : null);
 
@@ -52,16 +52,16 @@ exports.onStart = async function ({ bot, chatId, msg, args, usages }) {
 
   // Handle the 'list' command
   if (command === "list") {
-    if (admins.length === 0) {
-      return bot.sendMessage(chatId, "There are currently no admins.");
+    if (vipList.length === 0) {
+      return bot.sendMessage(chatId, "There are currently no VIPs.");
     }
-    let message = "List of System Admins:\n\n";
-    for (let adminId of admins) {
+    let message = "List of VIPs:\n\n";
+    for (let vipId of vipList) {
       try {
-        const userInfo = await getUserInfo(adminId);
+        const userInfo = await getUserInfo(vipId);
         if (userInfo) {
           const name = userInfo.first_name + ' ' + (userInfo.last_name || '');
-          message += `${config.symbols || ''} ${name}\nhttps://t.me/${userInfo.username || adminId}\n\n`;
+          message += `${global.config.symbols || ''} ${name}\nhttps://t.me/${userInfo.username || vipId}\n\n`;
         }
       } catch (err) {
         console.error("Error fetching user info:", err);
@@ -79,23 +79,23 @@ exports.onStart = async function ({ bot, chatId, msg, args, usages }) {
     if (isNaN(id)) {
       return bot.sendMessage(chatId, "⚠️ The ID provided is invalid.");
     }
-    if (admins.includes(id.toString())) {
-      return bot.sendMessage(chatId, "This user is already an admin.");
+    if (vipList.includes(id.toString())) {
+      return bot.sendMessage(chatId, "This user is already a VIP.");
     }
-    admins.push(id.toString());
-    config.admin = admins; // Update the admin list in the config
+    vipList.push(id.toString());
+    vip.uid = vipList; // Update the VIP list
 
-    // Save the updated config to config.json
+    // Save the updated vip list to vip.json
     try {
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+      fs.writeFileSync(vipPath, JSON.stringify(vip, null, 2), 'utf8');
     } catch (error) {
-      console.error("Error writing to config.json:", error);
-      return bot.sendMessage(chatId, "Failed to update admin list.");
+      console.error("Error writing to vip.json:", error);
+      return bot.sendMessage(chatId, "Failed to update VIP list.");
     }
 
     const userInfo = await getUserInfo(id);
     const userName = userInfo ? `${userInfo.first_name} ${userInfo.last_name || ''}` : 'User';
-    return bot.sendMessage(chatId, `${userName} has been successfully added as an admin.`);
+    return bot.sendMessage(chatId, `${userName} has been successfully added as a VIP.`);
   }
 
   // Handle the 'remove' command
@@ -103,29 +103,29 @@ exports.onStart = async function ({ bot, chatId, msg, args, usages }) {
     if (!admins.includes(msg.from.id.toString())) {
       return bot.sendMessage(chatId, "You don't have permission to use this command. Only admins can use this method.");
     }
-    if (admins.length === 0) {
-      return bot.sendMessage(chatId, "There are no admins to remove.");
+    if (vipList.length === 0) {
+      return bot.sendMessage(chatId, "There are no VIPs to remove.");
     }
     let id = parseInt(targetId);
     if (isNaN(id)) {
       return bot.sendMessage(chatId, "⚠️ The ID provided is invalid.");
     }
-    if (!admins.includes(id.toString())) {
-      return bot.sendMessage(chatId, "This user is not an admin.");
+    if (!vipList.includes(id.toString())) {
+      return bot.sendMessage(chatId, "This user is not a VIP.");
     }
-    config.admin = admins.filter(a => a !== id.toString()); // Remove the admin from the config
+    vip.uid = vipList.filter(v => v !== id.toString()); // Remove the VIP from the list
 
-    // Save the updated config to config.json
+    // Save the updated vip list to vip.json
     try {
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+      fs.writeFileSync(vipPath, JSON.stringify(vip, null, 2), 'utf8');
     } catch (error) {
-      console.error("Error writing to config.json:", error);
-      return bot.sendMessage(chatId, "Failed to update admin list.");
+      console.error("Error writing to vip.json:", error);
+      return bot.sendMessage(chatId, "Failed to update VIP list.");
     }
 
     const userInfo = await getUserInfo(id);
     const userName = userInfo ? `${userInfo.first_name} ${userInfo.last_name || ''}` : 'User';
-    return bot.sendMessage(chatId, `${userName} has been successfully removed as an admin.`);
+    return bot.sendMessage(chatId, `${userName} has been successfully removed as a VIP.`);
   }
 
   // Handle invalid or unknown commands

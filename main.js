@@ -1,81 +1,91 @@
-import fs from 'fs-extra';
-import path from 'path';
-import express from 'express';
-import chalk from 'chalk';
-import figlet from 'figlet';
-import log from './system/utility/log.js';
-import { loadAll } from './system/utility/utils.js';
-import config from './json/config.json' assert { type: 'json' };
-import vip from './json/vip.json' assert { type: 'json' };
-import api from './json/api.json' assert { type: 'json' };
-import { listen } from './system/listen.js';
-import bot from './system/handler/login.js';
+const TelegramBot = require('node-telegram-bot-api');
+const path = require('path');
+const fs = require('fs');
+const loadAll = require('./system/utility/utils');
 
-const app = express();
-const port = 8601;
+// JSON file paths
+const JSON_FILES = {
+  api: './json/api.json',
+  config: './json/config.json',
+  vip: './json/vip.json'
+};
 
-// Use the imported JSON directly
-global.config = config;
-global.api = api;
-global.vip = vip;
-global.bot = bot;
-global.utils = loadAll;
+// Create a function to watch JSON files for changes
+function watchJSONFile(filename, globalKey) {
+  const absolutePath = path.join(__dirname, filename);
+
+  // Initial load
+  try {
+    global[globalKey] = JSON.parse(fs.readFileSync(absolutePath, 'utf8'));
+  } catch (error) {
+    console.error(`Error loading ${filename}:`, error);
+  }
+
+  // Watch for changes
+  fs.watch(path.dirname(absolutePath), (eventType, file) => {
+    if (eventType === 'change' && file === path.basename(filename)) {
+      try {
+        const newData = JSON.parse(fs.readFileSync(absolutePath, 'utf8'));
+        global[globalKey] = newData;
+        console.log(`Reloaded ${filename} successfully`);
+      } catch (error) {
+        console.error(`Error reloading ${filename}:`, error);
+      }
+    }
+  });
+}
+
+// Initialize global client object
 global.client = {
-  startTime: new Date(),
   commands: new Map(),
-  events: new Map(),
-  results: new Map(),
   replies: new Map(),
   cooldowns: new Map(),
-  reactions: {},
+  events: new Map()
 };
 
-// Convert figlet to async function with modern syntax
-const generateFiglet = async (text) => {
-  return new Promise((resolve, reject) => {
-    figlet.text(text, (err, data) => {
-      if (err) reject(err);
-      else resolve(data);
+const { commands, replies, cooldowns, events } = global.client;
+
+// Setup JSON file watching
+Object.entries(JSON_FILES).forEach(([key, filepath]) => {
+  watchJSONFile(filepath, key);
+});
+
+// Initialize the bot
+const bot = new TelegramBot(global.config.token, { polling: true });
+
+// Main bot initialization
+(async () => {
+  try {
+    // Load commands and events
+    const errors = await loadAll();
+    if (errors) {
+      console.error('Errors loading commands/events:', errors);
+    } else {
+      console.log('All commands and events loaded successfully.');
+    }
+
+    // Set up message listener
+    bot.on('message', async (msg) => {
+      try {
+        const { listen } = require('./system/listen');
+        const chatId = msg.chat.id;
+        await listen({ bot, msg, chatId });
+      } catch (err) {
+        console.error('Error handling message:', err);
+      }
     });
-  });
-};
 
-try {
-  // Top-level await for modern ES2024 syntax
-  const figletText = await generateFiglet('Wataru');
-  console.log(chalk.blue(figletText));
-
-  const loadErrors = await loadAll();
-
-  if (loadErrors) {
-    log.error('Errors occurred while loading commands or events:', loadErrors);
+    console.log('Bot is up and running...');
+  } catch (error) {
+    console.error('Failed to start the bot:', error);
   }
+})();
 
-  // Check if `global.db` is properly initialized
-  if (!global.db || typeof global.db.getAllUserIds !== 'function' || typeof global.db.getAllGroupIds !== 'function') {
-    throw new Error('Database methods are not defined in global.db');
+// Error handling for the file watcher
+process.on('uncaughtException', (error) => {
+  if (error.code === 'EPERM' || error.code === 'ENOENT') {
+    console.error('File watcher error:', error);
+  } else {
+    throw error;
   }
-
-  const totalUser = (await global.db.getAllUserIds()).length;
-  const totalGroup = (await global.db.getAllGroupIds()).length;
-
-  log.info(`Commands: ${global.client.commands.size}`);
-  log.info(`Events: ${global.client.events.size}`);
-  log.info(`Users: ${totalUser}`);
-  log.info(`Groups: ${totalGroup}`);
-  log.info(`Owner: ${global.config.owner}`);
-
-  // Set up express server
-  app.get('/', (req, res) => {
-    res.send('Online!');
-  });
-
-  app.listen(port, () => {
-    log.info(`Wataru is running on port ${port}`);
-  });
-
-  // Start listening for Telegram messages
-  listen({ log, bot });
-} catch (error) {
-  log.error('Error during startup: ' + error);
-}
+});

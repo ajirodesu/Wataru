@@ -3,7 +3,7 @@ const axios = require('axios');
 // Custom fetch function to get a random waifu image.
 async function fetchWaifu() {
   try {
-    const response = await axios.get('https://api.waifu.pics/sfw/waifu');
+    const response = await axios.get('https://api.waifu.pics/sfw/neko');
     return response.data; // Expected to return an object like { url: "..." }
   } catch (error) {
     throw new Error('Error fetching waifu: ' + error.message);
@@ -11,9 +11,9 @@ async function fetchWaifu() {
 }
 
 exports.setup = {
-  name: 'waifu',
+  name: 'neko',
   version: '1.0.0',
-  description: 'Random waifu',
+  description: 'Random neko',
   author: 'Converted by ChatGPT',
   type: 'anyone',
   cooldown: 5,
@@ -36,7 +36,7 @@ exports.onStart = async function({ bot, msg, db }) {
 
     // Send the image with a caption.
     await bot.sendPhoto(chatId, data.url, {
-      caption: 'Random Waifu-!!'
+      caption: 'Random Neko-!!'
     });
   } catch (error) {
     console.error(error);
