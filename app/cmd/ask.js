@@ -2,7 +2,7 @@ exports.setup = {
   name: "ask",
   aliases: [],
   version: "1.0.0",
-  author: "Your Name",
+  author: "AjiroDesu",
   description: "Asks the user for their favorite color and processes the reply.",
   guide: [""],
   cooldown: 10,

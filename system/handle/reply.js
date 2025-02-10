@@ -17,19 +17,19 @@ exports.reply = async function({ bot, msg, chatId, args }) {
   const { setup, ...data } = replyData;
 
   if (!setup || !setup.name) {
-    await bot.sendMessage(chatId, "Cannot find command name to execute this reply!");
+    await bot.sendMessage(chatId, "Cannot find command name to execute this reply!", { parse_mode: "Markdown" });
     return;
   }
 
   const commandName = setup.name;
   const command = commands.get(commandName);
   if (!command) {
-    await bot.sendMessage(chatId, `Cannot find command: ${commandName}`);
+    await bot.sendMessage(chatId, `Cannot find command: ${commandName}`, { parse_mode: "Markdown" });
     return;
   }
 
   if (!command.onReply) {
-    await bot.sendMessage(chatId, `Command ${commandName} doesn't support replies`);
+    await bot.sendMessage(chatId, `Command ${commandName} doesn't support replies`, { parse_mode: "Markdown" });
     return;
   }
 
@@ -47,9 +47,10 @@ exports.reply = async function({ bot, msg, chatId, args }) {
     });
   } catch (err) {
     const errorMessage = `An error occurred while processing your reply: ${err.message}`;
-    await bot.sendMessage(chatId, errorMessage);
+    await bot.sendMessage(chatId, errorMessage, { parse_mode: "Markdown" });
   } finally {
-    // Clean up the reply data once processed.
-    replies.delete(msg.reply_to_message.message_id);
+    // Do NOT delete the reply context—allowing the user to reply any time
+    // as long as the original command list message remains.
+    // replies.delete(msg.reply_to_message.message_id);
   }
 };
