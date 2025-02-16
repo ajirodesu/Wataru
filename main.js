@@ -40,7 +40,8 @@ global.client = {
   commands: new Map(),
   replies: new Map(),
   cooldowns: new Map(),
-  events: new Map()
+  events: new Map(),
+  callbacks: new Map()
 };
 
 const { commands, replies, cooldowns, events } = global.client;

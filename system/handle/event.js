@@ -2,7 +2,7 @@ const moment = require("moment-timezone");
 
 exports.event = async function ({ bot, msg }) {
   const timeStart = Date.now();
-  const time = moment.tz("Asia/Manila").format("HH:mm:ss L");
+  const time = moment.tz(`${global.config.timeZone}`).format("HH:mm:ss L");
 
   const { events } = global.client;
   const { devMode } = global.config;

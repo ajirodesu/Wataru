@@ -8,7 +8,7 @@ exports.setup = {
   guide: [""],
   cooldown: 0,
   type: "anyone",
-  category: "fun"
+  category: "hidden"
 };
 
 // onStart is called when the command is invoked directly (e.g., via /detect).
