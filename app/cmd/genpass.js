@@ -65,7 +65,7 @@ class PasswordGenerator {
   }
 }
 
-exports.setup = {
+exports.meta = {
   name: 'genpass',
   version: '1.0.0',
   description: 'Generate strong passwords with optional base word',

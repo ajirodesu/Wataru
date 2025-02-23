@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-exports.setup = {
+exports.meta = {
   name: "file",
   aliases: [],
   version: "1.0.0",
@@ -20,7 +20,7 @@ exports.setup = {
 async function sendFileContent({ bot, chatId, filePath, fileDisplayName }) {
   const content = fs.readFileSync(filePath, "utf8");
   if (content.length > 2000) {
-    const tempDir = path.join(process.cwd(), "temp");
+    const tempDir = path.join(process.cwd(), "app", "tmp");
     if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
     const tempFile = path.join(tempDir, `${fileDisplayName}_${Date.now()}.txt`);
     fs.writeFileSync(tempFile, content, "utf8");
@@ -81,7 +81,7 @@ exports.onStart = async function({ bot, chatId, msg, args }) {
     const messageId = sentMsg.message_id || sentMsg.id;
     // Save context so that replies to this message will know which page to reference.
     global.client.replies.set(messageId, {
-      setup: exports.setup,
+      meta: exports.meta,
       page: page
     });
   } catch (error) {

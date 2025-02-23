@@ -13,7 +13,7 @@ const cooldowns = {};
  * @param {object} options.msg - The incoming message object.
  * @param {Array<string>} [options.args] - Optional pre-parsed message tokens.
  */
-exports.greet = async function({ bot, msg, args }) {
+exports.greet = async function({ bot, wataru, msg, args }) {
   try {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
@@ -29,12 +29,12 @@ exports.greet = async function({ bot, msg, args }) {
     if (tokens.length > 0) {
       const firstToken = tokens[0].toLowerCase();
       for (const cmd of global.client.commands.values()) {
-        if (cmd.setup.prefix === false || cmd.setup.prefix === "both") {
-          if (cmd.setup.name.toLowerCase() === firstToken) return;
+        if (cmd.meta.prefix === false || cmd.meta.prefix === "both") {
+          if (cmd.meta.name.toLowerCase() === firstToken) return;
           if (
-            cmd.setup.aliases &&
-            Array.isArray(cmd.setup.aliases) &&
-            cmd.setup.aliases.map(alias => alias.toLowerCase()).includes(firstToken)
+            cmd.meta.aliases &&
+            Array.isArray(cmd.meta.aliases) &&
+            cmd.meta.aliases.map(alias => alias.toLowerCase()).includes(firstToken)
           ) {
             return;
           }

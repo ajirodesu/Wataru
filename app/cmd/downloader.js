@@ -9,7 +9,7 @@ const baseApiUrl = async () => {
   return base.data.api;
 };
 
-exports.setup = {
+exports.meta = {
   name: "downloader",
   keyword: [
     "https://vt.tiktok.com",
@@ -43,11 +43,11 @@ exports.onStart = async function ({ bot, msg, chatId }) {
 };
 
 // Triggered when a message contains a supported URL.
-exports.onEvent = async function ({ bot, msg, chatId, args }) {
+exports.onWord = async function ({ bot, msg, chatId, args }) {
   const messageText = msg.link_preview_options?.url || msg.text || "";
 
   // Check if the message contains a supported URL
-  const detectedUrl = exports.setup.keyword.find((url) =>
+  const detectedUrl = exports.meta.keyword.find((url) =>
     messageText.startsWith(url)
   );
 
@@ -62,7 +62,7 @@ exports.onEvent = async function ({ bot, msg, chatId, args }) {
     });
 
     const waitMId = wait.message_id;
-    const videoPath = path.join(__dirname, "..", "temp", "downloaded_video.mp4");
+    const videoPath = path.join(__dirname, "..", "tmp", "downloaded_video.mp4");
 
     // Fetch video download link
     const { data } = await axios.get(

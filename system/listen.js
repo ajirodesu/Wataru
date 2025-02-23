@@ -1,36 +1,28 @@
-const { command } = require('./handle/command');
-const { commandEvent } = require('./handle/commandEvent');
-const { reply } = require('./handle/reply');
-const { event } = require('./handle/event');
-const { greet } = require('./handle/greet');
-const { callback } = require('./handle/callback');
+const fs = require('fs');
+const path = require('path');
+const { createWataru } = require("./utility/wataru");
 
-// Ensure the callback query listener is registered only once.
-let isCallbackRegistered = false;
+exports.listen = async function ({ bot, msg }) {
+  try {
+    const wataru = createWataru(bot, msg);
+    const handlersPath = path.join(__dirname, 'handle');
 
-exports.listen = async function ({ bot, msg, chatId }) {
-  // Register the callback query handler once.
-  if (!isCallbackRegistered) {
-    callback({ bot });
-    isCallbackRegistered = true;
+    const files = fs.readdirSync(handlersPath);
+    for (const file of files) {
+      if (file.endsWith('.js')) {
+        const handlerModule = require(path.join(handlersPath, file));
+        // Use the filename (without extension) as the key to the exported function.
+        const handlerName = path.basename(file, '.js');
+        const handler = handlerModule[handlerName];
+
+        if (typeof handler === 'function') {
+          await handler({ bot, msg, chatId: msg.chat.id, wataru });
+        } else {
+          console.warn(`Handler ${file} does not export a function named "${handlerName}".`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error reading handlers directory:', error);
   }
-
-  // If there is no text (e.g. join/leave notifications), process as an event.
-  if (!msg.text) {
-    return event({ bot, msg, chatId });
-  }
-
-  // For text messages, process direct command invocations and replies.
-  const args = msg.text.split(' ').slice(1);
-  const context = {
-    bot,
-    msg,
-    chatId,
-    args
-  };
-
-  await command(context);
-  await commandEvent(context);
-  await reply(context);
-  await greet(context);
 };

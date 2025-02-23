@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.setup = {
+exports.meta = {
   name: "cosplay",
   aliases: [],
   version: "0.0.1",
@@ -13,7 +13,7 @@ exports.setup = {
   category: "anime"
 };
 
-exports.onStart = async function({ msg, bot, chatId, log }) {
+exports.onStart = async function({ msg, bot, chatId, log, wataru }) {
   try {
     // Define the GitHub repository details
     const owner = 'ajirodesu';
@@ -31,14 +31,13 @@ exports.onStart = async function({ msg, bot, chatId, log }) {
     const videoFileRegex = /href="\/ajirodesu\/cosplay\/blob\/main\/([^"]+\.mp4)"/g;
     const videoFiles = [];
     let match;
-
     while ((match = videoFileRegex.exec(html)) !== null) {
       videoFiles.push(match[1]);
     }
 
     if (videoFiles.length === 0) {
       // No videos found in the repository
-      await bot.sendMessage(chatId, "No cosplay videos found in the repository.");
+      await wataru.reply("No cosplay videos found in the repository.");
       return;
     }
 
@@ -49,10 +48,10 @@ exports.onStart = async function({ msg, bot, chatId, log }) {
     const videoUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${randomVideo}`;
 
     // Send the random cosplay video to the chat
-    await bot.sendVideo(chatId, videoUrl, { caption: "Here's a random cosplay video!" });
+    await wataru.video(videoUrl, { caption: "Here's a random cosplay video!" });
   } catch (error) {
     log.error("Error fetching random video: " + error);
     // Send error message to the chat if the API request fails
-    await bot.sendMessage(chatId, `An error occurred while fetching a cosplay video: ${error.message}`);
+    await wataru.reply(`An error occurred while fetching a cosplay video: ${error.message}`);
   }
 };

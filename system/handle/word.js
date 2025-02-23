@@ -1,6 +1,6 @@
 const { commands } = global.client; // Ensure global.client.commands is a Map
 
-exports.commandEvent = async function ({ bot, msg, chatId }) {
+exports.word = async function ({ bot, wataru, msg, chatId }) {
   if (!msg || !msg.text) return;
 
   const text = msg.text.trim();
@@ -14,12 +14,12 @@ exports.commandEvent = async function ({ bot, msg, chatId }) {
     const firstToken = tokens[0].toLowerCase();
     for (const cmd of commands.values()) {
       // Check for commands that are meant to run without a prefix (or with "both").
-      if (cmd.setup.prefix === false || cmd.setup.prefix === "both") {
-        if (cmd.setup.name.toLowerCase() === firstToken) return;
+      if (cmd.meta.prefix === false || cmd.meta.prefix === "both") {
+        if (cmd.meta.name.toLowerCase() === firstToken) return;
         if (
-          cmd.setup.aliases &&
-          Array.isArray(cmd.setup.aliases) &&
-          cmd.setup.aliases.map(alias => alias.toLowerCase()).includes(firstToken)
+          cmd.meta.aliases &&
+          Array.isArray(cmd.meta.aliases) &&
+          cmd.meta.aliases.map(alias => alias.toLowerCase()).includes(firstToken)
         ) {
           return;
         }
@@ -29,19 +29,19 @@ exports.commandEvent = async function ({ bot, msg, chatId }) {
 
   // If not a command invocation, process keyword events.
   for (const cmd of commands.values()) {
-    if (cmd.setup && cmd.setup.keyword) {
-      const keywords = Array.isArray(cmd.setup.keyword)
-        ? cmd.setup.keyword
-        : [cmd.setup.keyword];
+    if (cmd.meta && cmd.meta.keyword) {
+      const keywords = Array.isArray(cmd.meta.keyword)
+        ? cmd.meta.keyword
+        : [cmd.meta.keyword];
       // Create a regex that matches any of the keywords (case-insensitive).
       const keywordRegex = new RegExp(`\\b(${keywords.join("|")})\\b`, "i");
 
       if (keywordRegex.test(msg.text)) {
         const args = text.split(/\s+/);
         try {
-          await cmd.onEvent({ bot, msg, chatId, args });
+          await cmd.onWord({ bot, wataru, msg, chatId, args });
         } catch (error) {
-          console.error(`Error in event handler for command "${cmd.setup.name}": ${error.message}`);
+          console.error(`Error in event handler for command "${cmd.meta.name}": ${error.message}`);
         }
       }
     }

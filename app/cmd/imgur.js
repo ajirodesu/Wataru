@@ -22,7 +22,7 @@ class Imgur {
   }
 }
 
-exports.setup = {
+exports.meta = {
   name: "imgur",
   aliases: [],
   version: "1.0.0",

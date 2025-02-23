@@ -10,7 +10,7 @@ async function fetchWaifu() {
   }
 }
 
-exports.setup = {
+exports.meta = {
   name: 'neko',
   version: '1.0.0',
   description: 'Random neko',

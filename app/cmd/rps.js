@@ -1,4 +1,4 @@
-exports.setup = {
+exports.meta = {
   name: "rps",
   version: "1.0.0",
   description: "Play Rock Paper Scissors",
@@ -17,9 +17,30 @@ exports.onStart = async function ({ bot, msg }) {
   // Build the inline keyboard with placeholder gameMessageId.
   const inlineKeyboard = [
     [
-      { text: "Rock 🪨", callback_data: JSON.stringify({ command: "rps", gameMessageId: null, args: ["rock"] }) },
-      { text: "Paper 📄", callback_data: JSON.stringify({ command: "rps", gameMessageId: null, args: ["paper"] }) },
-      { text: "Scissors ✂️", callback_data: JSON.stringify({ command: "rps", gameMessageId: null, args: ["scissors"] }) },
+      {
+        text: "Rock 🪨",
+        callback_data: JSON.stringify({
+          command: "rps",
+          gameMessageId: null,
+          args: ["rock"]
+        }),
+      },
+      {
+        text: "Paper 📄",
+        callback_data: JSON.stringify({
+          command: "rps",
+          gameMessageId: null,
+          args: ["paper"]
+        }),
+      },
+      {
+        text: "Scissors ✂️",
+        callback_data: JSON.stringify({
+          command: "rps",
+          gameMessageId: null,
+          args: ["scissors"]
+        }),
+      },
     ],
   ];
 
@@ -37,37 +58,53 @@ exports.onStart = async function ({ bot, msg }) {
   // Update the inline keyboard so that each button's callback_data includes the actual gameMessageId.
   const updatedKeyboard = [
     [
-      { text: "Rock 🪨", callback_data: JSON.stringify({ command: "rps", gameMessageId: gameMessage.message_id, args: ["rock"] }) },
-      { text: "Paper 📄", callback_data: JSON.stringify({ command: "rps", gameMessageId: gameMessage.message_id, args: ["paper"] }) },
-      { text: "Scissors ✂️", callback_data: JSON.stringify({ command: "rps", gameMessageId: gameMessage.message_id, args: ["scissors"] }) },
+      {
+        text: "Rock 🪨",
+        callback_data: JSON.stringify({
+          command: "rps",
+          gameMessageId: gameMessage.message_id,
+          args: ["rock"]
+        }),
+      },
+      {
+        text: "Paper 📄",
+        callback_data: JSON.stringify({
+          command: "rps",
+          gameMessageId: gameMessage.message_id,
+          args: ["paper"]
+        }),
+      },
+      {
+        text: "Scissors ✂️",
+        callback_data: JSON.stringify({
+          command: "rps",
+          gameMessageId: gameMessage.message_id,
+          args: ["scissors"]
+        }),
+      },
     ],
   ];
   try {
-    await bot.editMessageReplyMarkup({ inline_keyboard: updatedKeyboard }, { chat_id: chatId, message_id: gameMessage.message_id });
+    await bot.editMessageReplyMarkup(
+      { inline_keyboard: updatedKeyboard },
+      { chat_id: chatId, message_id: gameMessage.message_id }
+    );
   } catch (err) {
     console.error(`Failed to update inline keyboard: ${err.message}`);
   }
 };
 
-exports.onCallback = async function ({ bot, callbackQuery, chatId, args }) {
+exports.onCallback = async function ({ bot, callbackQuery, payload }) {
+  // payload is already parsed by the global callback handler
   const choices = ["rock", "paper", "scissors"];
   const emojis = { rock: "🪨", paper: "📄", scissors: "✂️" };
 
   try {
-    // Parse the callback data (using JSON; fallback to colon-separated string if needed).
-    let payload;
-    try {
-      payload = JSON.parse(callbackQuery.data);
-    } catch (err) {
-      const parts = callbackQuery.data.split(":");
-      payload = { command: parts[0], args: parts.slice(1) };
-    }
-
-    // Validate that this callback is for the RPS command and that it belongs to the correct game message.
+    // Validate that this callback is for the RPS command and for the correct game message.
     if (payload.command !== "rps") return;
     if (!payload.gameMessageId || callbackQuery.message.message_id !== payload.gameMessageId) return;
 
-    // Retrieve the player's choice from the callback payload.
+    // Retrieve the player's choice from the payload.
     const playerChoice = payload.args[0];
     if (!choices.includes(playerChoice)) {
       await bot.answerCallbackQuery(callbackQuery.id, { text: "Invalid choice." });

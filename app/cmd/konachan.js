@@ -19,7 +19,7 @@ async function fetchKonachanImage() {
   }
 }
 
-exports.setup = {
+exports.meta = {
   name: 'konachan',
   version: '1.0.0',
   description: 'Fetches a random anime image from Konachan.',

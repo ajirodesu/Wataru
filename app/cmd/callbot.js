@@ -1,4 +1,4 @@
-exports.setup = {
+exports.meta = {
   name: "callbot",
   keyword: ["bot"],
   aliases: [],
@@ -32,27 +32,30 @@ async function getBotName(bot) {
 
 /**
  * onStart is called when the command is invoked directly.
+ * Here, we assume that `wataru` has already been attached to the parameter.
  */
-exports.onStart = async function ({ bot, msg }) {
+exports.onStart = async function ({ bot, msg, wataru }) {
   const botname = await getBotName(bot);
   const name = msg.from.first_name || "User";
   const response =
-    randomResponses[Math.floor(Math.random() * randomResponses.length)].replace("{botname}", botname);
-  await bot.sendMessage(msg.chat.id, `${name}, ${response}`, {
-    parse_mode: "HTML"
-  });
+    randomResponses[Math.floor(Math.random() * randomResponses.length)]
+      .replace("{botname}", botname);
+
+  // Use wataru.reply to send a message.
+  await wataru.reply(`${name}, ${response}`);
 };
 
 /**
- * onEvent is triggered by the global event handler
+ * onWord is triggered by the global event handler
  * whenever a message contains any of the keywords.
  */
-exports.onEvent = async function ({ bot, msg }) {
+exports.onWord = async function ({ bot, msg, wataru }) {
   const botname = await getBotName(bot);
   const name = (`${msg.from.first_name || ''} ${msg.from.last_name || ''}`.trim()) || "User";
   const response =
-    randomResponses[Math.floor(Math.random() * randomResponses.length)].replace("{botname}", botname);
-  await bot.sendMessage(msg.chat.id, `${name}, ${response}`, {
-    parse_mode: "HTML"
-  });
+    randomResponses[Math.floor(Math.random() * randomResponses.length)]
+      .replace("{botname}", botname);
+
+  // Use wataru.reply to automatically include reply_to_message_id in non-private chats.
+  await wataru.reply(`${name}, ${response}`);
 };

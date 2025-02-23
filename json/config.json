@@ -1,10 +1,9 @@
 {
   "allowInbox": true,
-  "devMode": false,
+  "devMode": true,
   "adminOnly": false,
   "timeZone": "Asia/Manila",
   "token": "7152230397:AAFPF1cYd0XhoRRGTYqiZeeTsveN9TcN69E",
-  "polling": true,
   "prefix": "-",
   "symbols": "●",
   "owner": "Lance Ajiro",

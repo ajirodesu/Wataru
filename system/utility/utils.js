@@ -13,7 +13,7 @@ const loadAll = async function () {
   const errs = {};
   // Adjusted paths assuming utils.js is in project/system/utility/
   const commandsPath = path.join(__dirname, '..', '..', 'app', 'cmd');
-  const eventsPath = path.join(__dirname, '..', '..', 'app', 'evnt');
+  const eventsPath = path.join(__dirname, '..', '..', 'app', 'evt');
 
   try {
     // Load commands
@@ -27,12 +27,12 @@ const loadAll = async function () {
         const cmd = cmdModule.default || cmdModule;
         if (!cmd) {
           throw new Error('does not export anything');
-        } else if (!cmd.setup) {
-          throw new Error('does not export setup');
+        } else if (!cmd.meta) {
+          throw new Error('does not export meta');
         } else if (!cmd.onStart) {
           throw new Error('does not export onStart');
         }
-        global.client.commands.set(cmd.setup.name, cmd);
+        global.client.commands.set(cmd.meta.name, cmd);
       } catch (error) {
         console.error(`Error loading command ${file}: ${error.message}`);
         errs[file] = error;
@@ -50,12 +50,12 @@ const loadAll = async function () {
         const evt = evtModule.default || evtModule;
         if (!evt) {
           throw new Error('does not export anything');
-        } else if (!evt.setup) {
-          throw new Error('does not export setup');
+        } else if (!evt.meta) {
+          throw new Error('does not export meta');
         } else if (!evt.onStart) {
           throw new Error('does not export onStart');
         }
-        global.client.events.set(evt.setup.name, evt);
+        global.client.events.set(evt.meta.name, evt);
       } catch (error) {
         console.error(`Error loading event ${file}: ${error.message}`);
         errs[file] = error;

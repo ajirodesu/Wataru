@@ -1,4 +1,4 @@
-exports.setup = {
+exports.meta = {
   name: "ask",
   aliases: [],
   version: "1.0.0",
@@ -21,7 +21,7 @@ exports.onStart = async function({ bot, chatId }) {
     // Save the entire sent message (not just a copy of its text) so that
     // the onReply handler can reference the original message by its ID.
     global.client.replies.set(sentMsg.message_id, {
-      setup: exports.setup,
+      meta: exports.meta,
       question: sentMsg // Storing the actual sent message object
     });
   } catch (error) {

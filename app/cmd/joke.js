@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.setup = {
+exports.meta = {
   name: 'joke',
   version: '1.0.0',
   description: 'Sends a hilarious random joke',
@@ -21,7 +21,7 @@ exports.onStart = async function({ bot, msg }) {
     const jokeMessage = `
 😂 <b>Get Ready to Laugh! 🤣</b>
 
-${joke.setup}
+${joke.meta}
 
 <i>${joke.punchline}</i>
 
@@ -37,15 +37,15 @@ ${joke.setup}
 
     const backupJokes = [
       {
-        setup: "Why don't scientists trust atoms?",
+        meta: "Why don't scientists trust atoms?",
         punchline: "Because they make up everything!"
       },
       {
-        setup: "I told my wife she was drawing her eyebrows too high",
+        meta: "I told my wife she was drawing her eyebrows too high",
         punchline: "She looked surprised!"
       },
       {
-        setup: "Why did the scarecrow win an award?",
+        meta: "Why did the scarecrow win an award?",
         punchline: "Because he was outstanding in his field!"
       }
     ];
@@ -56,7 +56,7 @@ ${joke.setup}
 ❌ <b>Oops! Joke Retrieval Failed</b>
 
 Here's a backup joke:
-${randomBackupJoke.setup}
+${randomBackupJoke.meta}
 
 <i>${randomBackupJoke.punchline}</i>
 

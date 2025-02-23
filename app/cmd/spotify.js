@@ -2,7 +2,7 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-exports.setup = {
+exports.meta = {
   name: "spotify",
   aliases: ["sp"],
   version: "1.0.0",
@@ -97,7 +97,7 @@ exports.onStart = async function({ bot, chatId, msg, args }) {
         const mp3Response = await axios.get(songData.mp3, { responseType: 'arraybuffer' });
 
         // Ensure the temporary directory exists
-        const tempDir = path.join(process.cwd(), 'app/temp');
+        const tempDir = path.join(process.cwd(), 'app/tmp');
         if (!fs.existsSync(tempDir)) {
           fs.mkdirSync(tempDir, { recursive: true });
         }

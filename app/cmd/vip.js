@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Command configuration
-exports.setup = {
+exports.meta = {
   name: "vip",
   version: "0.0.1",
   type: "anyone",

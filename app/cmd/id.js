@@ -1,4 +1,4 @@
-exports.setup = {
+exports.meta = {
   name: 'id',
   version: '1.0.0',
   description: 'Get user ID information',

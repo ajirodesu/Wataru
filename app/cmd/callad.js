@@ -1,4 +1,4 @@
-exports.setup = {
+exports.meta = {
   name: "callad",
   aliases: [],
   version: "1.4.0",
@@ -11,7 +11,7 @@ exports.setup = {
 };
 
 // Handles ongoing conversations between users and admins
-exports.onReply = async function({ bot, msg, chatId, args, data }) {
+exports.onReply = async function({ bot, wataru, msg, chatId, args, data }) {
   const senderName = `${msg.from.first_name || 'Unknown'} ${msg.from.last_name || ''}`.trim();
   const groupName = msg.chat.title || "Private Chat";
   const groupId = msg.chat.id;
@@ -28,7 +28,7 @@ exports.onReply = async function({ bot, msg, chatId, args, data }) {
         }
       ).then(sentMsg => {
         global.client.replies.set(sentMsg.message_id, {
-          setup: exports.setup,
+          meta: exports.meta,
           type: "calladmin",
           userId: data.userId,
           adminMsgId: sentMsg.message_id, // Store new admin message ID
@@ -52,7 +52,7 @@ exports.onReply = async function({ bot, msg, chatId, args, data }) {
       }
     ).then(sentMsg => {
       global.client.replies.set(sentMsg.message_id, {
-        setup: exports.setup,
+        meta: exports.meta,
         type: "reply",
         userId: data.userId,
         adminMsgId: msg.message_id, // Store admin message ID
@@ -67,7 +67,7 @@ exports.onReply = async function({ bot, msg, chatId, args, data }) {
 };
 
 // Handles initial reports
-exports.onStart = async function({ bot, msg, chatId, args, userId }) {
+exports.onStart = async function({ bot, wataru, msg, chatId, args, userId }) {
   if (!args[0]) {
     return await bot.sendMessage(chatId, "❌ **Please enter the content to report.**", { parse_mode: "Markdown" });
   }
@@ -92,7 +92,7 @@ exports.onStart = async function({ bot, msg, chatId, args, userId }) {
       }
     ).then(sentMsg => {
       global.client.replies.set(sentMsg.message_id, {
-        setup: exports.setup,
+        meta: exports.meta,
         type: "calladmin",
         userId: chatId,
         adminMsgId: sentMsg.message_id, // Store admin's first message ID

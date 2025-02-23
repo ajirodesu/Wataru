@@ -1,32 +1,32 @@
 const moment = require("moment-timezone");
 
-exports.event = async function ({ bot, msg }) {
+exports.event = async function({ bot, msg, chatId, wataru }) {
   const timeStart = Date.now();
-  const time = moment.tz(`${global.config.timeZone}`).format("HH:mm:ss L");
-
+  const formattedTime = moment.tz(global.config.timeZone).format("HH:mm:ss L");
   const { events } = global.client;
   const { devMode } = global.config;
 
-  const chatId = String(msg.chat.id);
-  const chatType = msg.chat.type;
+  // Ensure chatId is defined (fallback to msg.chat.id if not provided)
+  chatId = chatId || String(msg.chat.id);
 
-  // Check if the message is a system event (join/leave)
+  // Process only system events (join/leave)
   if (msg.new_chat_members || msg.left_chat_member) {
-    for (const [eventName, eventHandler] of events.entries()) {
-      // For join events, check for "welcome"; for leave events, check for "leave"
-      if (eventHandler.setup.type.includes(msg.new_chat_members ? "welcome" : "leave")) {
-        try {
-          const context = { bot, msg, chatId };
+    const eventType = msg.new_chat_members ? "welcome" : "leave";
 
-          await eventHandler.onStart(context); // Execute the event
+    for (const [eventName, eventHandler] of events.entries()) {
+      // Check if this event handler should process the current system event.
+      if (eventHandler.meta.type.includes(eventType)) {
+        try {
+          const context = { bot, wataru, msg, chatId };
+          await eventHandler.onStart(context); // Execute the event handler
 
           if (devMode) {
             console.log(
-              `[ Event ] Executed "${eventHandler.setup.name}" at ${time} in ${Date.now() - timeStart}ms`
+              `[ Event ] Executed "${eventHandler.meta.name}" at ${formattedTime} in ${Date.now() - timeStart}ms`
             );
           }
         } catch (error) {
-          console.error(`[ Event Error ] ${eventHandler.setup.name}:`, error);
+          console.error(`[ Event Error ] ${eventHandler.meta.name}:`, error);
         }
       }
     }

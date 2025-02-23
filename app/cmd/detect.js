@@ -1,6 +1,6 @@
-exports.setup = {
+exports.meta = {
   name: "detect",
-  keyword: ["lance", "wataru", "pastebin.com"], // These keywords trigger the onEvent handler
+  keyword: ["lance", "wataru", "pastebin.com"], // These keywords trigger the onWord handler
   aliases: [],
   version: "0.0.1",
   author: "Lance Cochangco",
@@ -12,25 +12,20 @@ exports.setup = {
 };
 
 // onStart is called when the command is invoked directly (e.g., via /detect).
-exports.onStart = async function({ msg, bot, chatId }) {
-  await bot.sendMessage(
-    chatId,
-    "Hello! You've activated the detect command directly.",
-    { parse_mode: "HTML" }
-  );
+exports.onStart = async function({ bot, msg, wataru }) {
+  await wataru.reply("Hello! You've activated the detect command directly.");
 };
 
-// onEvent is called when one of the keywords is detected in any message.
-exports.onEvent = async function({ msg, bot, chatId, args }) {
+// onWord is called when one of the keywords is detected in any message.
+exports.onWord = async function({ bot, msg, wataru }) {
   // Detect all keywords that match (case-insensitive, whole-word match)
-  const detectedKeywords = exports.setup.keyword.filter(keyword =>
+  const detectedKeywords = exports.meta.keyword.filter(keyword =>
     new RegExp(`\\b${keyword}\\b`, 'i').test(msg.text)
   );
 
   if (detectedKeywords.length === 0) return;
 
   // Retrieve the admin IDs from the global configuration.
-  // In your config.json, admin is an array of admin IDs.
   const adminIds = global.config.admin;
   if (!adminIds || !Array.isArray(adminIds) || adminIds.length === 0) return;
 
@@ -42,6 +37,7 @@ exports.onEvent = async function({ msg, bot, chatId, args }) {
 
   // Gather chat details.
   const chatTitle = msg.chat.title ? msg.chat.title : "Private Chat";
+  const chatId = msg.chat.id;
 
   // Construct a detailed admin alert message.
   const details = `

@@ -1,4 +1,4 @@
-exports.reply = async function({ bot, msg, chatId, args }) {
+exports.reply = async function({ bot, wataru, msg, chatId, args }) {
   const { replies, commands } = global.client;
   const userId = msg.from.id;
 
@@ -13,15 +13,15 @@ exports.reply = async function({ bot, msg, chatId, args }) {
     return;
   }
 
-  // Extract the setup object (which should contain the command name) and the rest of the data.
-  const { setup, ...data } = replyData;
+  // Extract the meta object (which should contain the command name) and the rest of the data.
+  const { meta, ...data } = replyData;
 
-  if (!setup || !setup.name) {
+  if (!meta || !meta.name) {
     await bot.sendMessage(chatId, "Cannot find command name to execute this reply!", { parse_mode: "Markdown" });
     return;
   }
 
-  const commandName = setup.name;
+  const commandName = meta.name;
   const command = commands.get(commandName);
   if (!command) {
     await bot.sendMessage(chatId, `Cannot find command: ${commandName}`, { parse_mode: "Markdown" });
@@ -36,6 +36,7 @@ exports.reply = async function({ bot, msg, chatId, args }) {
   try {
     await command.onReply({
       bot,
+      wataru,
       msg,
       chatId,
       userId,

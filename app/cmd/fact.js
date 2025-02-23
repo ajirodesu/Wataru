@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.setup = {
+exports.meta = {
   name: "fact",
   aliases: [],
   version: "0.0.1",

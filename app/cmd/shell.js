@@ -1,6 +1,6 @@
 const { exec } = require("child_process");
 
-exports.setup = {
+exports.meta = {
   name: "shell",
   version: "1.0.0",
   description: "Execute shell commands via the bot.",

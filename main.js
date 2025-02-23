@@ -60,9 +60,9 @@ const bot = new TelegramBot(global.config.token, { polling: true });
     // Load commands and events
     const errors = await loadAll();
     if (errors) {
-      console.error('Errors loading commands/events:', errors);
+      console.error('Errors loading commands:', errors);
     } else {
-      console.log('All commands and events loaded successfully.');
+      console.log('All commands loaded successfully.');
     }
 
     // Set up message listener
@@ -89,4 +89,4 @@ process.on('uncaughtException', (error) => {
   } else {
     throw error;
   }
-});
+}); 

@@ -1,4 +1,4 @@
-exports.setup = {
+exports.meta = {
   name: 'start',
   version: '1.0.0',
   description: 'Welcome message and instructions',
@@ -9,8 +9,7 @@ exports.setup = {
   guide: []
 };
 
-exports.onStart = async function({ bot, msg }) {
-  const chatId = msg.chat.id;
+exports.onStart = async function({ bot, msg, chatId }) {
   const firstName = msg.from.first_name;
 
   const welcomeMessage = `

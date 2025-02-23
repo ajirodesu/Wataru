@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.setup = {
+exports.meta = {
   name: "ai",
   aliases: ["chatgpt", "openai"],
   prefix: "both", 
@@ -13,7 +13,7 @@ exports.setup = {
   category: "ai"
 };
 
-exports.onStart = async function({ bot, chatId, msg, args, usages }) {
+exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
   const question = args.join(" ");
   if (!question) {
     return await usages();
@@ -21,19 +21,16 @@ exports.onStart = async function({ bot, chatId, msg, args, usages }) {
 
   try {
     // Build the API URL with the user's question.
-    const apiUrl = `https://kaiz-apis.gleeze.com/api/gpt-4o?ask=${encodeURIComponent(question)}&uid=${msg.from.id}&webSearch=off`;
+    const apiUrl = `${global.api.kaiz}/api/gpt-4o?ask=${encodeURIComponent(question)}&uid=${msg.from.id}&webSearch=off`;
     const response = await axios.get(apiUrl);
 
-    // The API returns a JSON with "author" and "response" keys.
-    const aiAuthor = response.data.author || "Unknown";
+    // The API returns a JSON with keys like "response"
     const aiResponse = response.data.response || "No response was returned from the API.";
 
-    // Build a formatted message including the API author and the response.
-    const message = `${aiResponse}`;
-
-    await bot.sendMessage(chatId, message, { parse_mode: "Markdown" });
+    // Send the formatted AI response using our custom reply method.
+    await wataru.reply(aiResponse, { parse_mode: "Markdown" });
   } catch (error) {
     console.error("Error fetching AI response:", error);
-    await bot.sendMessage(chatId, "An error occurred while fetching the AI response.");
+    await wataru.reply("An error occurred while fetching the AI response.");
   }
 };

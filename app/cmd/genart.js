@@ -3,7 +3,7 @@ const FormData = require("form-data");
 const fs = require("fs");
 const path = require("path");
 
-exports.setup = {
+exports.meta = {
   name: "genart",
   aliases: [],
   version: "1.0.0",
@@ -22,7 +22,7 @@ exports.onStart = async function({ msg, bot, chatId, args, cwd }) {
 
   // Ensure cwd is defined, fallback to process.cwd()
   cwd = cwd || process.cwd();
-  const tempDir = path.join(cwd, "app/temp");
+  const tempDir = path.join(cwd, "app/tmp");
 
   // Ensure temp directory exists
   if (!fs.existsSync(tempDir)) {

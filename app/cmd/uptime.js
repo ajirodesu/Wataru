@@ -1,4 +1,4 @@
-exports.setup = {
+exports.meta = {
   name: "uptime",
   aliases: ["up"],
   version: "1.0.0",

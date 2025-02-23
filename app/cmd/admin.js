@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Command configuration
-exports.setup = {
+exports.meta = {
   name: "admin",
   aliases: ["admins", "ad"],
   version: "0.0.1",
@@ -15,7 +15,8 @@ exports.setup = {
 };
 
 // Command initialization
-exports.onStart = async function ({ bot, chatId, msg, args, usages }) {
+exports.onStart = async function ({ wataru, bot, chatId, msg, args, usages }) {
+
   // Define the path to the config.json file in the json folder
   const configPath = path.join(process.cwd(), 'json', 'config.json');
 
@@ -25,7 +26,7 @@ exports.onStart = async function ({ bot, chatId, msg, args, usages }) {
     config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
   } catch (error) {
     console.error("Error reading config.json:", error);
-    return bot.sendMessage(chatId, "An error occurred while accessing the admin list.");
+    return wataru.reply("An error occurred while accessing the admin list.");
   }
 
   let admins = config.admin || [];
@@ -39,10 +40,10 @@ exports.onStart = async function ({ bot, chatId, msg, args, usages }) {
     targetId = args[1];
   }
 
-  // Function to get user info by ID
+  // Function to get user info by ID using wataru
   async function getUserInfo(userId) {
     try {
-      const userInfo = await bot.getChat(userId);
+      const userInfo = await wataru.getChat(userId);
       return userInfo;
     } catch (err) {
       console.error("Error fetching user info:", err);
@@ -53,7 +54,7 @@ exports.onStart = async function ({ bot, chatId, msg, args, usages }) {
   // Handle the 'list' command
   if (command === "list") {
     if (admins.length === 0) {
-      return bot.sendMessage(chatId, "There are currently no admins.");
+      return wataru.reply("There are currently no admins.");
     }
     let message = "List of System Admins:\n\n";
     for (let adminId of admins) {
@@ -67,20 +68,20 @@ exports.onStart = async function ({ bot, chatId, msg, args, usages }) {
         console.error("Error fetching user info:", err);
       }
     }
-    return bot.sendMessage(chatId, message);
+    return wataru.reply(message);
   }
 
   // Handle the 'add' command
   if (command === "add" || command === "-a" || command === "a") {
     if (!admins.includes(msg.from.id.toString())) {
-      return bot.sendMessage(chatId, "You don't have permission to use this command. Only admins can use this method.");
+      return wataru.reply("You don't have permission to use this command. Only admins can use this method.");
     }
     let id = parseInt(targetId);
     if (isNaN(id)) {
-      return bot.sendMessage(chatId, "⚠️ The ID provided is invalid.");
+      return wataru.reply("⚠️ The ID provided is invalid.");
     }
     if (admins.includes(id.toString())) {
-      return bot.sendMessage(chatId, "This user is already an admin.");
+      return wataru.reply("This user is already an admin.");
     }
     admins.push(id.toString());
     config.admin = admins; // Update the admin list in the config
@@ -90,28 +91,28 @@ exports.onStart = async function ({ bot, chatId, msg, args, usages }) {
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
     } catch (error) {
       console.error("Error writing to config.json:", error);
-      return bot.sendMessage(chatId, "Failed to update admin list.");
+      return wataru.reply("Failed to update admin list.");
     }
 
     const userInfo = await getUserInfo(id);
     const userName = userInfo ? `${userInfo.first_name} ${userInfo.last_name || ''}` : 'User';
-    return bot.sendMessage(chatId, `${userName} has been successfully added as an admin.`);
+    return wataru.reply(`${userName} has been successfully added as an admin.`);
   }
 
   // Handle the 'remove' command
   if (command === "remove" || command === "-r" || command === "r") {
     if (!admins.includes(msg.from.id.toString())) {
-      return bot.sendMessage(chatId, "You don't have permission to use this command. Only admins can use this method.");
+      return wataru.reply("You don't have permission to use this command. Only admins can use this method.");
     }
     if (admins.length === 0) {
-      return bot.sendMessage(chatId, "There are no admins to remove.");
+      return wataru.reply("There are no admins to remove.");
     }
     let id = parseInt(targetId);
     if (isNaN(id)) {
-      return bot.sendMessage(chatId, "⚠️ The ID provided is invalid.");
+      return wataru.reply("⚠️ The ID provided is invalid.");
     }
     if (!admins.includes(id.toString())) {
-      return bot.sendMessage(chatId, "This user is not an admin.");
+      return wataru.reply("This user is not an admin.");
     }
     config.admin = admins.filter(a => a !== id.toString()); // Remove the admin from the config
 
@@ -120,12 +121,12 @@ exports.onStart = async function ({ bot, chatId, msg, args, usages }) {
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
     } catch (error) {
       console.error("Error writing to config.json:", error);
-      return bot.sendMessage(chatId, "Failed to update admin list.");
+      return wataru.reply("Failed to update admin list.");
     }
 
     const userInfo = await getUserInfo(id);
     const userName = userInfo ? `${userInfo.first_name} ${userInfo.last_name || ''}` : 'User';
-    return bot.sendMessage(chatId, `${userName} has been successfully removed as an admin.`);
+    return wataru.reply(`${userName} has been successfully removed as an admin.`);
   }
 
   // Handle invalid or unknown commands

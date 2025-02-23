@@ -215,7 +215,7 @@ const leetReplacements = {
     'g': '9'
 };
 
-exports.setup = {
+exports.meta = {
   name: 'devname',
   version: '1.0.0',
   description: 'Generate cool developer usernames based on your name.',
