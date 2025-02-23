@@ -35,7 +35,7 @@ exports.onStart = async function ({ bot, chatId, msg, wataru }) {
         );
       if (command) {
         const helpMessage = generateCommandInfo(command.meta, prefix);
-        return await bot.sendMessage(chatId, helpMessage, { parse_mode: "Markdown" });
+        return await wataru.reply(helpMessage, { parse_mode: "Markdown" });
       }
     }
 
@@ -62,7 +62,8 @@ exports.onStart = async function ({ bot, chatId, msg, wataru }) {
       chatType
     );
 
-    const sentMsg = await bot.sendMessage(chatId, helpMessage, {
+    // Send the help message with inline navigation using wataru.reply.
+    const sentMsg = await wataru.reply(helpMessage, {
       parse_mode: "Markdown",
       reply_markup:
         replyMarkup && replyMarkup.inline_keyboard && replyMarkup.inline_keyboard.length
@@ -70,9 +71,17 @@ exports.onStart = async function ({ bot, chatId, msg, wataru }) {
           : undefined,
     });
 
-    // Update inline buttons with the actual message id.
+    // Create a unique session ID and store session details in global.client.callbacks.
+    const instanceId = "help_" + Date.now().toString();
+    global.client.callbacks.set(instanceId, {
+      senderID,
+      helpMessageId: sentMsg.message_id,
+      chatId,
+    });
+
+    // Update inline buttons so that each callback data now includes the instanceId.
     if (replyMarkup && replyMarkup.inline_keyboard && replyMarkup.inline_keyboard.length) {
-      const newReplyMarkup = updateReplyMarkupWithMessageId(replyMarkup, sentMsg.message_id);
+      const newReplyMarkup = updateReplyMarkupWithInstanceId(replyMarkup, instanceId);
       await bot.editMessageReplyMarkup(newReplyMarkup, { chat_id: chatId, message_id: sentMsg.message_id });
     }
   } catch (error) {
@@ -82,9 +91,14 @@ exports.onStart = async function ({ bot, chatId, msg, wataru }) {
 
 exports.onCallback = async function ({ bot, callbackQuery, chatId, args, payload }) {
   try {
+    // Ensure this callback is for the help command.
     if (!payload || payload.command !== "help") return;
-    // Ensure the callback is for this help message.
-    if (!payload.helpMessageId || callbackQuery.message.message_id !== payload.helpMessageId) return;
+    if (!payload.instanceId) return;
+
+    const session = global.client.callbacks.get(payload.instanceId);
+    if (!session) return;
+    // Removed the message_id check so that the button can be used anytime.
+    if (String(callbackQuery.from.id) !== session.senderID) return;
 
     const newPageNumber = payload.page;
     const { commands } = global.client;
@@ -110,16 +124,20 @@ exports.onCallback = async function ({ bot, callbackQuery, chatId, args, payload
       chatType
     );
 
-    const newReplyMarkup = updateReplyMarkupWithMessageId(replyMarkup, callbackQuery.message.message_id);
+    const newReplyMarkup =
+      replyMarkup && replyMarkup.inline_keyboard && replyMarkup.inline_keyboard.length
+        ? updateReplyMarkupWithInstanceId(replyMarkup, payload.instanceId)
+        : undefined;
+
     await bot.editMessageText(helpMessage, {
       chat_id: chat_id,
       message_id: callbackQuery.message.message_id,
       parse_mode: "Markdown",
-      reply_markup:
-        replyMarkup && replyMarkup.inline_keyboard && replyMarkup.inline_keyboard.length
-          ? newReplyMarkup
-          : undefined,
+      reply_markup: newReplyMarkup,
     });
+
+    // (Optionally) update the session's helpMessageId if needed.
+    session.helpMessageId = callbackQuery.message.message_id;
 
     await bot.answerCallbackQuery(callbackQuery.id);
   } catch (error) {
@@ -130,16 +148,16 @@ exports.onCallback = async function ({ bot, callbackQuery, chatId, args, payload
 /* Helper Functions */
 
 /**
- * Updates inline keyboard buttons so that each callback_data JSON includes the current messageId.
+ * Updates inline keyboard buttons so that each callback_data JSON includes the current instanceId.
  */
-function updateReplyMarkupWithMessageId(replyMarkup, messageId) {
+function updateReplyMarkupWithInstanceId(replyMarkup, instanceId) {
   if (!replyMarkup || !replyMarkup.inline_keyboard) return replyMarkup;
   const updatedKeyboard = replyMarkup.inline_keyboard.map((row) =>
     row.map((button) => {
       if (button && button.callback_data) {
         try {
           const data = JSON.parse(button.callback_data);
-          data.helpMessageId = messageId;
+          data.instanceId = instanceId;
           return { text: button.text, callback_data: JSON.stringify(data) };
         } catch (e) {
           return button;
@@ -203,18 +221,18 @@ function generateHelpMessage(
     `📜 *Command List*\n\n${paginatedCommands.join("\n")}\n\n` +
     `*Page:* ${validPage}/${totalPages}\n*Total Commands:* ${totalCommands}`;
 
-  // Build inline navigation buttons.
+  // Build inline navigation buttons with a placeholder for instanceId.
   const inlineButtons = [];
   if (validPage > 1) {
     inlineButtons.push({
       text: "◀️",
-      callback_data: JSON.stringify({ command: "help", helpMessageId: null, page: validPage - 1 }),
+      callback_data: JSON.stringify({ command: "help", instanceId: null, page: validPage - 1 }),
     });
   }
   if (validPage < totalPages) {
     inlineButtons.push({
       text: "▶️",
-      callback_data: JSON.stringify({ command: "help", helpMessageId: null, page: validPage + 1 }),
+      callback_data: JSON.stringify({ command: "help", instanceId: null, page: validPage + 1 }),
     });
   }
   const replyMarkup = inlineButtons.length ? { inline_keyboard: [inlineButtons] } : {};
@@ -280,9 +298,10 @@ function generateCommandInfo(cmdInfo, prefix) {
 
   let usageList = "";
   if (cmdInfo.guide) {
-    usageList = Array.isArray(cmdInfo.guide) && cmdInfo.guide.length
-      ? cmdInfo.guide.map((u) => `\`${prefix}${cmdInfo.name} ${u}\``).join("\n")
-      : `\`${prefix}${cmdInfo.name} ${cmdInfo.guide}\``;
+    usageList =
+      Array.isArray(cmdInfo.guide) && cmdInfo.guide.length
+        ? cmdInfo.guide.map((u) => `\`${prefix}${cmdInfo.name} ${u}\``).join("\n")
+        : `\`${prefix}${cmdInfo.name} ${cmdInfo.guide}\``;
   } else {
     usageList = "No usage instructions provided.";
   }

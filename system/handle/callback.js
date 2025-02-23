@@ -12,7 +12,7 @@ exports.callback = async function({ bot, msg, chatId, wataru }) {
     }
 
     const commandName = payload.command;
-    const { commands } = global.client;
+    const { commands, callbacks } = global.client;
     const command = commands.get(commandName);
 
     if (command && typeof command.onCallback === 'function') {

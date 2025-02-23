@@ -19,6 +19,7 @@ function createWataru(bot, msg, defaultParseMode) {
     chatAction: { botMethod: "sendChatAction", autoReply: false },
     invoice: { botMethod: "sendInvoice", autoReply: false },
     game: { botMethod: "sendGame", autoReply: false },
+    edit: { botMethod: "editMessageText", autoReply: false}
   };
 
   const wataru = {};

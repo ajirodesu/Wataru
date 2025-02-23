@@ -2,70 +2,102 @@ const fs = require('fs-extra');
 const path = require('path');
 const { create, clear } = require('./cache.js');
 
-const ready = (async function () {
-  await create();
-  await clear();
+// Initialize the cache once at startup.
+const ready = (async () => {
+  try {
+    await create();
+    await clear();
+  } catch (error) {
+    console.error('Error initializing cache:', error);
+  }
 })();
 
-const loadAll = async function () {
+/**
+ * Loads modules from a specified directory and registers them into the provided store.
+ *
+ * @param {string} directory - The absolute path to the directory containing modules.
+ * @param {Map} moduleStore - The Map in which to store the loaded modules.
+ * @param {string} moduleType - A label used for logging (e.g., 'command' or 'event').
+ * @returns {Promise<Object>} - An object containing any errors keyed by filename.
+ */
+async function loadModulesFromDirectory(directory, moduleStore, moduleType) {
+  const errors = {};
+
+  // Attempt to read the directory
+  let files;
+  try {
+    files = await fs.readdir(directory);
+  } catch (error) {
+    console.error(`Error reading ${moduleType} directory at ${directory}: ${error.message}`);
+    errors[directory] = error;
+    return errors;
+  }
+
+  // Filter for JavaScript files only
+  const jsFiles = files.filter(file => file.endsWith('.js'));
+
+  // Process each file individually
+  for (const file of jsFiles) {
+    const filePath = path.join(directory, file);
+    try {
+      const moduleImport = require(filePath);
+      const moduleExport = moduleImport.default || moduleImport;
+
+      // Ensure the module has the required properties
+      if (!moduleExport) {
+        throw new Error('Module does not export anything');
+      }
+      if (!moduleExport.meta) {
+        throw new Error('Module does not export meta');
+      }
+      if (!moduleExport.onStart) {
+        throw new Error('Module does not export onStart');
+      }
+
+      // Register the module using its meta.name as the key
+      moduleStore.set(moduleExport.meta.name, moduleExport);
+    } catch (error) {
+      console.error(`Error loading ${moduleType} from file ${file}: ${error.message}`);
+      errors[file] = error;
+    }
+  }
+  return errors;
+}
+
+/**
+ * Loads all command and event modules.
+ *
+ * @returns {Promise<false|Object>} - Returns false if no errors occurred, otherwise an object of errors.
+ */
+const loadAll = async () => {
+  // Ensure cache initialization is complete
   await ready;
 
-  const errs = {};
-  // Adjusted paths assuming utils.js is in project/system/utility/
+  const aggregatedErrors = {};
+
+  // Adjusted paths assuming the current file is in project/system/utility/
   const commandsPath = path.join(__dirname, '..', '..', 'app', 'cmd');
   const eventsPath = path.join(__dirname, '..', '..', 'app', 'evt');
 
-  try {
-    // Load commands
-    const commandFiles = fs
-      .readdirSync(commandsPath)
-      .filter((file) => file.endsWith('.js'));
+  // Load command modules and capture any errors
+  const commandErrors = await loadModulesFromDirectory(
+    commandsPath,
+    global.client.commands,
+    'command'
+  );
 
-    for (const file of commandFiles) {
-      try {
-        const cmdModule = require(path.join(commandsPath, file));
-        const cmd = cmdModule.default || cmdModule;
-        if (!cmd) {
-          throw new Error('does not export anything');
-        } else if (!cmd.meta) {
-          throw new Error('does not export meta');
-        } else if (!cmd.onStart) {
-          throw new Error('does not export onStart');
-        }
-        global.client.commands.set(cmd.meta.name, cmd);
-      } catch (error) {
-        console.error(`Error loading command ${file}: ${error.message}`);
-        errs[file] = error;
-      }
-    }
+  // Load event modules and capture any errors
+  const eventErrors = await loadModulesFromDirectory(
+    eventsPath,
+    global.client.events,
+    'event'
+  );
 
-    // Load events
-    const eventFiles = fs
-      .readdirSync(eventsPath)
-      .filter((file) => file.endsWith('.js'));
+  // Combine errors from both operations
+  Object.assign(aggregatedErrors, commandErrors, eventErrors);
 
-    for (const file of eventFiles) {
-      try {
-        const evtModule = require(path.join(eventsPath, file));
-        const evt = evtModule.default || evtModule;
-        if (!evt) {
-          throw new Error('does not export anything');
-        } else if (!evt.meta) {
-          throw new Error('does not export meta');
-        } else if (!evt.onStart) {
-          throw new Error('does not export onStart');
-        }
-        global.client.events.set(evt.meta.name, evt);
-      } catch (error) {
-        console.error(`Error loading event ${file}: ${error.message}`);
-        errs[file] = error;
-      }
-    }
-  } catch (error) {
-    console.error(`Unexpected error: ${error.stack}`);
-  }
-
-  return Object.keys(errs).length === 0 ? false : errs;
+  // Return false if no errors occurred, otherwise return the error details
+  return Object.keys(aggregatedErrors).length === 0 ? false : aggregatedErrors;
 };
 
 module.exports = loadAll;
