@@ -43,7 +43,7 @@ exports.onStart = async function ({ wataru, bot, chatId, msg, args, usages }) {
   // Function to get user info by ID using wataru
   async function getUserInfo(userId) {
     try {
-      const userInfo = await wataru.getChat(userId);
+      const userInfo = await bot.getChat(userId);
       return userInfo;
     } catch (err) {
       console.error("Error fetching user info:", err);

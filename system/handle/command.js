@@ -44,7 +44,7 @@ exports.command = async function ({ bot, wataru, msg, chatId, args }) {
     const parts = commandName.split("@");
     commandName = parts[0];
     try {
-      const me = await wataru.getMe();
+      const me = await bot.getMe();
       const botUsername = me.username;
       if (parts[1].toLowerCase() !== botUsername.toLowerCase()) {
         return;
@@ -123,7 +123,7 @@ exports.command = async function ({ bot, wataru, msg, chatId, args }) {
       );
     }
     try {
-      const member = await wataru.getChatMember(chatId, senderID);
+      const member = await bot.getChatMember(chatId, senderID);
       if (!(member.status === "administrator" || member.status === "creator")) {
         return wataru.reply(
           `You do not have sufficient permission to use the "${command.meta.name}" command. (Requires group administrator)`
