@@ -12,8 +12,8 @@ exports.meta = {
   description: "Updates the bot to the latest version from GitHub.",
   guide: [],
   cooldown: 10,
-  type: "admin", // Restrict to admin users if desired
-  category: "system"
+  type: "admin",
+  category: "system",
 };
 
 /**
@@ -21,23 +21,38 @@ exports.meta = {
  * @param {Object} params - Wataru bot framework parameters.
  */
 exports.onStart = async function({ wataru, chatId, msg }) {
+  // Optional: Restrict to bot owner
+  // const ownerId = "YOUR_TELEGRAM_ID";
+  // if (msg.from.id.toString() !== ownerId) {
+  //   return wataru.reply("Only the bot owner can update the bot.");
+  // }
 
   try {
     await wataru.reply("Starting update process...");
-    updater.updateBot();
+    await updater.updateBot();
     await wataru.reply("Update completed successfully!");
     await wataru.reply("Restarting bot now...");
-    process.exit(0); // Trigger restart via index.js
+    process.exit(0);
   } catch (error) {
-    await wataru.reply(`Failed to update the bot: ${error.message}`);
+    const errorMsg = `Failed to update the bot: ${error.message || "Unknown error"}`;
+    console.error(errorMsg);
+    await wataru.reply(errorMsg);
   }
 };
 
-// Shell entry point for `node update`
+/**
+ * Shell entry point for `node update`.
+ */
 if (require.main === module) {
   console.log("Running update from shell...");
-  updater.updateBot().catch((error) => {
-    console.error("Shell update failed:", error.message);
-    process.exit(1); // Exit with error code if shell-initiated
-  });
+  updater.updateBot()
+    .then(() => {
+      console.log("Shell update completed successfully. Restarting...");
+      process.exit(0);
+    })
+    .catch((error) => {
+      const errorMsg = `Shell update failed: ${error.message || "Unknown error"}`;
+      console.error(errorMsg);
+      process.exit(1);
+    });
 }

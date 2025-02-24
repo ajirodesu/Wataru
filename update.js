@@ -2,75 +2,112 @@
 
 const { execSync } = require("child_process");
 const path = require("path");
-const fs = require("fs");
 
 // Constants
 const REPO_URL = "https://github.com/ajirodesu/wataru.git";
 const PROJECT_DIR = path.resolve(__dirname);
-const CONFIG_PATH = path.join(PROJECT_DIR, "setup", "config.json");
-const TEMP_CONFIG_PATH = path.join(PROJECT_DIR, "setup_config_temp.json");
+const SETUP_DIR_RELATIVE = "setup"; // Relative to PROJECT_DIR
+const SETUP_DIR = path.join(PROJECT_DIR, SETUP_DIR_RELATIVE);
 
 /**
- * Executes a shell command and logs output.
- * @param {string} command - The shell command to run.
- * @returns {string} Command output.
+ * Executes a shell command with error handling.
+ * @param {string} command - The shell command to execute.
+ * @param {string} [errorMessage] - Custom error message for failure.
+ * @returns {string} Command output, or empty string if none.
  * @throws {Error} If the command fails.
  */
-function runCommand(command) {
+function runCommand(command, errorMessage = `Failed to execute '${command}'`) {
   try {
     const output = execSync(command, { cwd: PROJECT_DIR, stdio: "inherit" });
-    console.log(`Command executed: ${command}`);
+    console.log(`Executed: ${command}`);
     return output ? output.toString().trim() : "";
   } catch (error) {
-    console.error(`Error executing '${command}': ${error.message}`);
-    throw error;
+    const message = `${errorMessage}: ${error.message}`;
+    console.error(message);
+    throw new Error(message);
   }
 }
 
 /**
- * Updates the bot to the latest version from GitHub, preserving setup/config.json.
- * @returns {Promise<void>} Resolves when update is complete.
+ * Checks if Git is available on the system.
+ * @returns {boolean} True if Git is installed, false otherwise.
+ */
+function isGitInstalled() {
+  try {
+    runCommand("git --version", "Git is not installed on this system");
+    return true;
+  } catch (error) {
+    console.error(error.message);
+    return false;
+  }
+}
+
+/**
+ * Updates the bot to the latest version from GitHub, excluding the entire setup folder.
+ * @returns {Promise<void>} Resolves when update completes successfully.
  */
 async function updateBot() {
   console.log("Starting bot update...");
 
   try {
-    // Check if config file exists and stash it
-    let configStashed = false;
-    if (fs.existsSync(CONFIG_PATH)) {
-      fs.copyFileSync(CONFIG_PATH, TEMP_CONFIG_PATH);
-      console.log(`Stashed config file to ${TEMP_CONFIG_PATH}`);
-      configStashed = true;
+    // Validate Git installation
+    if (!isGitInstalled()) {
+      throw new Error("Git is not installed. Please install Git and try again.");
     }
 
     // Ensure git is initialized
-    runCommand("git rev-parse --is-inside-work-tree || git init");
+    runCommand(
+      "git rev-parse --is-inside-work-tree || git init",
+      "Failed to initialize or verify Git repository"
+    );
 
     // Set or update the remote origin
-    runCommand(`git remote set-url origin ${REPO_URL} || git remote add origin ${REPO_URL}`);
+    if (!REPO_URL) {
+      throw new Error("Repository URL is not defined. Please set REPO_URL.");
+    }
+    runCommand(
+      `git remote set-url origin ${REPO_URL} || git remote add origin ${REPO_URL}`,
+      "Failed to set Git remote origin"
+    );
 
-    // Fetch and pull the latest changes
-    runCommand("git fetch origin");
-    runCommand("git reset --hard origin/main"); // Overwrites all tracked files
-
-    // Restore the stashed config file if it existed
-    if (configStashed) {
-      fs.copyFileSync(TEMP_CONFIG_PATH, CONFIG_PATH);
-      fs.unlinkSync(TEMP_CONFIG_PATH);
-      console.log("Restored original config file from stash.");
+    // Mark all files in setup/ as skip-worktree to exclude from updates
+    try {
+      // List all tracked files in setup/ and apply skip-worktree
+      const trackedFiles = execSync(`git ls-files ${SETUP_DIR_RELATIVE}`, { cwd: PROJECT_DIR })
+        .toString()
+        .trim()
+        .split("\n")
+        .filter(Boolean); // Remove empty lines
+      if (trackedFiles.length > 0) {
+        runCommand(
+          `git update-index --skip-worktree ${trackedFiles.join(" ")}`,
+          "Failed to exclude setup folder contents from updates"
+        );
+      } else {
+        console.log("No tracked files in setup/ to exclude.");
+      }
+    } catch (error) {
+      console.warn(`Warning: ${error.message}. Proceeding with update anyway.`);
     }
 
+    // Fetch and pull the latest changes (setup/ remains untouched)
+    runCommand("git fetch origin", "Failed to fetch from remote repository");
+    runCommand(
+      "git reset --hard origin/main",
+      "Failed to reset to latest main branch"
+    );
+
     // Install dependencies
-    runCommand("npm install");
+    try {
+      runCommand("npm install", "Failed to install NPM dependencies");
+    } catch (error) {
+      console.warn(`Warning: ${error.message}. Update completed without full dependency install.`);
+    }
 
     console.log("Bot updated successfully.");
   } catch (error) {
-    console.error("Update failed:", error.message);
-    // Clean up temp file if it exists
-    if (fs.existsSync(TEMP_CONFIG_PATH)) {
-      fs.unlinkSync(TEMP_CONFIG_PATH);
-    }
-    throw error; // Let caller handle the failure
+    console.error("Update process failed:", error.message);
+    throw error; // Propagate to caller (e.g., update.js)
   }
 }
 
