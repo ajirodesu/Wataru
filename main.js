@@ -1,7 +1,8 @@
 const TelegramBot = require('node-telegram-bot-api');
 const path = require('path');
 const fs = require('fs');
-const utils = require('./system/utility/utils');
+const loadAll = require('./system/utility/utils');
+const { install } = require('./system/install');
 
 // JSON file paths
 const JSON_FILES = {
@@ -46,7 +47,7 @@ global.client = {
 
 const { commands, replies, cooldowns, events } = global.client;
 
-global.utils = utils;
+global.utils = loadAll;
 
 // Setup JSON file watching
 Object.entries(JSON_FILES).forEach(([key, filepath]) => {
@@ -60,7 +61,7 @@ const bot = new TelegramBot(global.config.token, { polling: true });
 (async () => {
   try {
     // Load commands and events
-    const errors = await utils();
+    const errors = await loadAll();
     if (errors) {
       console.error('Errors loading commands:', errors);
     } else {
@@ -73,6 +74,7 @@ const bot = new TelegramBot(global.config.token, { polling: true });
         const { listen } = require('./system/listen');
         const chatId = msg.chat.id;
         await listen({ bot, msg, chatId });
+        await install();
       } catch (err) {
         console.error('Error handling message:', err);
       }
