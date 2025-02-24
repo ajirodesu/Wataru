@@ -1,64 +1,55 @@
-const childProcess = require('child_process');
-const util = require('util');
+"use strict";
 
-// Promisify exec for async/await usage
-const exec = util.promisify(childProcess.exec);
+const { execSync } = require("child_process");
+
+// Constants
+const RESTART_CODE = 0;
 
 /**
  * Automatically installs missing NPM packages and restarts the bot.
- * @param {Object} params - Placeholder for Wataru parameters (not used here).
  */
-exports.install = async function() {
-  // Store the original require function
+exports.install = function() {
   const originalRequire = module.constructor.prototype.require;
 
-  // Override the require function globally
   module.constructor.prototype.require = function(moduleName) {
     try {
-      // Attempt to load the module with the original require
       return originalRequire.call(this, moduleName);
     } catch (error) {
-      // Check if the error is due to a missing module
-      if (error.code === 'MODULE_NOT_FOUND' && error.message.includes(`Cannot find module '${moduleName}'`)) {
-        console.log(`Module '${moduleName}' not found. Attempting to install...`);
+      if (error.code === "MODULE_NOT_FOUND" && !moduleName.startsWith(".") && !moduleName.startsWith("/")) {
+        console.log(`NPM module '${moduleName}' not found. Attempting to install...`);
 
         try {
-          // Install the package synchronously using npm
-          childProcess.execSync(`npm install ${moduleName}`, {
-            stdio: 'inherit', // Show installation output in console
-            cwd: process.cwd() // Install in the current working directory
+          execSync(`npm install ${moduleName}`, {
+            stdio: "inherit",
+            cwd: process.cwd(),
           });
 
           console.log(`Successfully installed '${moduleName}'. Restarting bot...`);
-
-          // Restart the bot process
           restartBot();
 
-          // Return a placeholder to avoid breaking the current execution (though it won’t proceed far due to exit)
+          // This return won't execute due to process.exit, but included for completeness
           return originalRequire.call(this, moduleName);
         } catch (installError) {
           console.error(`Failed to install '${moduleName}': ${installError.message}`);
-          throw installError; // Re-throw to let the caller handle the failure
+          throw installError;
         }
       }
-      // Re-throw unrelated errors
-      throw error;
+      throw error; // Re-throw for local paths or other errors
     }
   };
+
+  console.log("Auto NPM package installer initialized.");
 };
 
 /**
  * Restarts the bot process.
  */
 function restartBot() {
-  // Log the restart attempt
   console.log("Bot restarting now...");
-
-  // Exit the process with a success code (0) to trigger a restart via process manager
-  process.exit(0);
+  process.exit(RESTART_CODE); // Trigger restart via process manager
 }
 
-// Ensure this module runs only once
+// Run only once
 if (!global.install) {
   exports.install();
   global.install = true;
