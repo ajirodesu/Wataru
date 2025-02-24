@@ -1,7 +1,7 @@
 "use strict";
 
 const path = require("path");
-const updater = require(path.join(process.cwd(), "system", "update"));
+const updater = require(path.join(process.cwd(), "update"));
 
 exports.meta = {
   name: "update",

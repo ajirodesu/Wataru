@@ -37,8 +37,6 @@ exports.install = function() {
       throw error; // Re-throw for local paths or other errors
     }
   };
-
-  console.log("Auto NPM package installer initialized.");
 };
 
 /**
