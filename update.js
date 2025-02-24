@@ -47,9 +47,10 @@ function isGitInstalled() {
 }
 
 /**
- * Creates a .gitignore file if it doesn't exist and ensures setup folder is ignored
+ * Permanently excludes setup folder from git tracking
  */
-function ensureGitIgnore() {
+function excludeSetupFolder() {
+  // Add to .gitignore if not already present
   const gitignorePath = path.join(PROJECT_DIR, '.gitignore');
   const setupIgnorePattern = `/${SETUP_DIR_RELATIVE}/`;
 
@@ -62,14 +63,10 @@ function ensureGitIgnore() {
     fs.appendFileSync(gitignorePath, `\n${setupIgnorePattern}\n`);
     console.log(`Added ${SETUP_DIR_RELATIVE}/ to .gitignore`);
   }
-}
 
-/**
- * Excludes setup folder contents from git updates using skip-worktree
- */
-function excludeSetupFolder() {
+  // Remove setup folder from git tracking if it was previously tracked
   try {
-    // Get list of tracked files in setup directory
+    // First check if the setup folder is tracked
     const trackedFiles = execSync(
       `git ls-files ${SETUP_DIR_RELATIVE}`,
       { cwd: PROJECT_DIR, encoding: "utf8" }
@@ -79,24 +76,27 @@ function excludeSetupFolder() {
       .filter(Boolean);
 
     if (trackedFiles.length > 0) {
-      // Mark each file as skip-worktree
-      for (const file of trackedFiles) {
-        runCommand(
-          `git update-index --skip-worktree "${file}"`,
-          `Failed to exclude ${file} from updates`
-        );
-      }
-      console.log(`Excluded ${trackedFiles.length} files in ${SETUP_DIR_RELATIVE}/ from updates`);
-    } else {
-      console.log(`No tracked files found in ${SETUP_DIR_RELATIVE}/`);
+      // Remove the files from git tracking
+      runCommand(
+        `git rm -r --cached ${SETUP_DIR_RELATIVE}`,
+        "Failed to untrack setup folder"
+      );
+
+      // Add the changes to a new commit
+      runCommand(
+        'git commit -m "Remove setup folder from git tracking"',
+        "Failed to commit setup folder removal"
+      );
+
+      console.log(`Successfully removed ${SETUP_DIR_RELATIVE}/ from git tracking`);
     }
   } catch (error) {
-    console.warn(`Warning: Failed to exclude setup folder: ${error.message}`);
+    console.warn(`Note: Setup folder is already untracked or doesn't exist`);
   }
 }
 
 /**
- * Updates the bot to the latest version from GitHub, preserving the setup folder.
+ * Updates the bot to the latest version from GitHub, completely ignoring the setup folder.
  * @returns {Promise<void>} Resolves when update completes successfully.
  */
 async function updateBot() {
@@ -108,8 +108,8 @@ async function updateBot() {
       throw new Error("Git is not installed. Please install Git and try again.");
     }
 
-    // Ensure setup folder is properly ignored
-    ensureGitIgnore();
+    // Ensure setup folder is completely excluded from git
+    excludeSetupFolder();
 
     // Initialize git if needed
     runCommand(
@@ -127,39 +127,35 @@ async function updateBot() {
       "Failed to set Git remote origin"
     );
 
-    // Exclude setup folder from updates
-    excludeSetupFolder();
-
-    // Save any local changes in setup folder
-    if (fs.existsSync(SETUP_DIR)) {
-      runCommand(
-        `git stash push ${SETUP_DIR_RELATIVE}`,
-        "Failed to stash setup folder changes"
-      );
-    }
+    // Create a temporary exclude file for the update process
+    const tempExcludePath = path.join(PROJECT_DIR, '.git', 'info', 'exclude');
+    fs.mkdirSync(path.dirname(tempExcludePath), { recursive: true });
+    fs.appendFileSync(tempExcludePath, `\n${SETUP_DIR_RELATIVE}/\n`);
 
     // Fetch and apply updates
     runCommand("git fetch origin", "Failed to fetch from remote repository");
+
+    // Save current HEAD for comparison
+    const oldHead = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+
+    // Apply updates while keeping setup folder untouched
     runCommand(
-      "git reset --hard origin/main",
+      `git reset --hard origin/main -- $(git ls-files | grep -v "^${SETUP_DIR_RELATIVE}/")`,
       "Failed to reset to latest main branch"
     );
 
-    // Restore setup folder changes if they were stashed
-    try {
-      runCommand("git stash pop", "Failed to restore setup folder changes");
-    } catch (error) {
-      console.warn("No stashed changes to restore");
-    }
-
-    // Install dependencies
-    try {
-      runCommand("npm install", "Failed to install NPM dependencies");
-    } catch (error) {
-      console.warn(`Warning: ${error.message}. Update completed without full dependency install.`);
+    // Install dependencies only if there were actual updates
+    const newHead = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+    if (oldHead !== newHead) {
+      try {
+        runCommand("npm install", "Failed to install NPM dependencies");
+      } catch (error) {
+        console.warn(`Warning: ${error.message}. Update completed without full dependency install.`);
+      }
     }
 
     console.log("Bot updated successfully!");
+    console.log(`Note: ${SETUP_DIR_RELATIVE}/ folder was preserved and remains unchanged.`);
   } catch (error) {
     console.error("Update process failed:", error.message);
     throw error;
